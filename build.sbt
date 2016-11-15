@@ -1,24 +1,29 @@
 import sbt._
+import Versions._
 
 name := """crud-template"""
 
 version := "1.0"
 
-scalaVersion := "2.11.7"
-
-// Change this to another test framework if you prefer
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+scalaVersion := "2.11.8"
 
 // Uncomment to use Akka
-//libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.3.11"
+libraryDependencies ++= Seq(
+  "com.typesafe.akka" %% "akka-http-experimental"            % akkaVersion,
+  "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaVersion,
+  "org.scalatest"     %% "scalatest"                         % "3.0.0"      % "test"
+)
 
-enablePlugins(GitVersioning)
-
+// git
 git.useGitDescribe := true
 
+showCurrentGitBranch
+
+// see more about BuildInfoPlugin and SbtGit at http://blog.byjean.eu/2015/07/10/painless-release-with-sbt.html
 lazy val root = (project in file(".")).
-  enablePlugins(BuildInfoPlugin).
+  enablePlugins(BuildInfoPlugin, GitVersioning, GitBranchPrompt).
   settings(
-    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, git.gitHeadCommit, "custom" -> 1234),
-    buildInfoPackage := "net.michalsitko.build"
+    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, git.baseVersion, git.gitHeadCommit),
+    buildInfoPackage := "net.michalsitko",
+    buildInfoUsePackageAsPath := true
   )
