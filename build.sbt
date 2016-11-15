@@ -11,6 +11,10 @@ scalaVersion := "2.11.8"
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-http-experimental"            % akkaVersion,
   "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaVersion,
+  "io.circe"          %% "circe-core"                        % circeVersion,
+  "io.circe"          %% "circe-generic"                     % circeVersion,
+  "io.circe"          %% "circe-parser"                      % circeVersion,
+  "de.heikoseeberger" %% "akka-http-circe"                   % "1.10.1",
   "org.scalatest"     %% "scalatest"                         % "3.0.0"      % "test"
 )
 

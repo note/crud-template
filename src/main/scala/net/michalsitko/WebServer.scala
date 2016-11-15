@@ -15,7 +15,6 @@ object WebServer {
     val route =
       path("version") {
         get {
-          // TODO: make it compile in IntelliJ
           val buildInfo = net.michalsitko.BuildInfo.toString
           complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, buildInfo))
         }
