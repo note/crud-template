@@ -5,7 +5,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import de.heikoseeberger.akkahttpcirce.CirceSupport
-import io.circe.{Encoder, Json}
+import io.circe.{ Encoder, Json }
 import io.circe.syntax._
 
 object WebServer extends AnyRef with CirceSupport {
@@ -27,7 +27,7 @@ object WebServer extends AnyRef with CirceSupport {
   private implicit val encodeBuildInfo: Encoder[BuildInfo.type] = new Encoder[BuildInfo.type] {
     final def apply(buildInfo: BuildInfo.type): Json = {
       val fieldsMap = Map("version" -> buildInfo.version, "scalaVersion" -> buildInfo.scalaVersion) ++
-                buildInfo.gitHeadCommit.fold(Map.empty[String, String])(c => Map("commit" -> c))
+        buildInfo.gitHeadCommit.fold(Map.empty[String, String])(c => Map("commit" -> c))
       fieldsMap.asJson
     }
   }
