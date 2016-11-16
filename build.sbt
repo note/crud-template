@@ -29,5 +29,21 @@ lazy val root = (project in file(".")).
   settings(
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, git.baseVersion, git.gitHeadCommit),
     buildInfoPackage := "net.michalsitko",
-    buildInfoUsePackageAsPath := true
+    buildInfoUsePackageAsPath := true,
+    scalacOptions ++= Seq(
+      "-target:jvm-1.8",
+      "-encoding", "UTF-8",
+      "-unchecked",
+      "-deprecation",
+      "-feature",
+      "-language:existentials",
+      "-language:higherKinds",
+      "-language:implicitConversions",
+      "-Yno-adapted-args",
+      "-Ywarn-dead-code",
+      "-Ywarn-infer-any",
+      "-Ywarn-unused-import",
+      "-Xfatal-warnings",
+      "-Xlint"
+    )
   )

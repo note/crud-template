@@ -26,7 +26,7 @@ object WebServer extends AnyRef with CirceSupport {
 
   private implicit val encodeBuildInfo: Encoder[BuildInfo.type] = new Encoder[BuildInfo.type] {
     final def apply(buildInfo: BuildInfo.type): Json = {
-      val fieldsMap = Map("version" -> buildInfo.version, "scalaVersion" -> buildInfo.scalaVersion) ++
+      val fieldsMap = Map("name" -> buildInfo.name, "version" -> buildInfo.version, "scalaVersion" -> buildInfo.scalaVersion) ++
         buildInfo.gitHeadCommit.fold(Map.empty[String, String])(c => Map("commit" -> c))
       fieldsMap.asJson
     }
