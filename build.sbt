@@ -34,5 +34,7 @@ lazy val core = (project in file("core"))
   .enablePlugins(GitBranchPrompt)
   .commonSettings
   .settings(
-    libraryDependencies ++= Common.testDeps
+    libraryDependencies ++= Seq(
+      "org.typelevel" %% "cats" % "0.8.1"
+    ) ++ Common.testDeps
   )
