@@ -5,30 +5,26 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import de.heikoseeberger.akkahttpcirce.CirceSupport
-import io.circe.{ Encoder, Json }
-import io.circe.syntax._
+import net.michalsitko.controllers.{ UserController, VersionController }
+import net.michalsitko.crud.service.InMemoryUserService
 
-object WebServer extends AnyRef with CirceSupport {
+object WebServer extends AnyRef with CirceSupport with Services {
   def main(args: Array[String]) {
-
     implicit val system = ActorSystem("crud-template-http-system")
     implicit val materializer = ActorMaterializer()
 
-    val route =
-      path("version") {
-        get {
-          complete(BuildInfo)
-        }
-      }
+    // TODO: Check if services/controllers should use ActorSystem's EC
+    implicit val ec = system.dispatcher
+
+    val versionController = new VersionController
+    val userController = new UserController(userService)
+
+    val route = versionController.route ~ userController.route
 
     Http().bindAndHandle(route, "localhost", 8080)
   }
+}
 
-  private implicit val encodeBuildInfo: Encoder[BuildInfo.type] = new Encoder[BuildInfo.type] {
-    final def apply(buildInfo: BuildInfo.type): Json = {
-      val fieldsMap = Map("name" -> buildInfo.name, "version" -> buildInfo.version, "scalaVersion" -> buildInfo.scalaVersion) ++
-        buildInfo.gitHeadCommit.fold(Map.empty[String, String])(c => Map("commit" -> c))
-      fieldsMap.asJson
-    }
-  }
+trait Services {
+  val userService = new InMemoryUserService
 }

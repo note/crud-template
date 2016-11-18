@@ -10,10 +10,20 @@ import net.michalsitko.crud.entity.{ SavedUser, User, UserId }
 import scala.collection.mutable
 import scala.concurrent.Future
 
-sealed trait UserSaveError
-case object IncorrectEmail extends UserSaveError
-case object PasswordTooShort extends UserSaveError
-case object PasswordContainsWhiteSpace extends UserSaveError
+sealed trait UserSaveError {
+  def message: String
+}
+case object IncorrectEmail extends UserSaveError {
+  override def message: String = "Incorrect email"
+}
+
+case object PasswordTooShort extends UserSaveError {
+  override def message: String = "Password too short"
+}
+
+case object PasswordContainsWhiteSpace extends UserSaveError {
+  override def message: String = "Password too short"
+}
 
 trait UserService {
   def save(user: User): Future[ValidatedNel[UserSaveError, SavedUser]]

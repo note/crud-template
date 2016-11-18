@@ -25,7 +25,8 @@ lazy val web = (project in file("web"))
       "io.circe"          %% "circe-core"                        % circeVersion,
       "io.circe"          %% "circe-generic"                     % circeVersion,
       "io.circe"          %% "circe-parser"                      % circeVersion,
-      "de.heikoseeberger" %% "akka-http-circe"                   % "1.10.1"
+      // as for now stable version uses cats 0.5.2 and we want to use the newest cats
+      "de.heikoseeberger" %% "akka-http-circe"                   % "1.11.0-M2"
     ) ++ Common.commonDeps
   )
   .dependsOn(core)
