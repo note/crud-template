@@ -14,7 +14,7 @@ class InMemoryUserServiceSpec extends WordSpec with Matchers {
 
   "InMemoryUserService" should {
     "validate" in {
-      val user = User("abc", "123", "")
+      val user = User("abc", "123", "a a")
 
       val res = Await.result(service.save(user), timeout)
 
