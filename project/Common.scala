@@ -1,6 +1,8 @@
 import com.typesafe.sbt.GitPlugin.autoImport._
 import sbt._
 import sbt.Keys._
+import scoverage.ScoverageKeys._
+import scoverage.ScoverageSbtPlugin
 import Versions._
 
 object Common {

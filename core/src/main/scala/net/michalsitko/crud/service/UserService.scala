@@ -52,10 +52,8 @@ class InMemoryUserService extends UserService {
 
   private def validatePasswordFormat(password: String): ValidatedNel[UserSaveError, Unit] =
     if (password.exists(_.isWhitespace)) {
-      println("bazinga 1")
       invalidNel(PasswordContainsWhiteSpace)
     } else {
-      println("bazinga 2")
       valid(())
     }
 
