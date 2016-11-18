@@ -18,7 +18,7 @@ trait UserService {
   def get(userId: UserId): Future[Option[SavedUser]]
 }
 
-class DefaultUserService extends UserService {
+class InMemoryUserService extends UserService {
   private var users = mutable.Map.empty[UserId, SavedUser]
 
   override def save(user: User): Future[ValidatedNel[UserSaveError, SavedUser]] = {

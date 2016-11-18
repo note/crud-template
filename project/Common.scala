@@ -30,11 +30,15 @@ object Common {
 
       // git
       git.useGitDescribe := true,
-      showCurrentGitBranch
+      showCurrentGitBranch,
+
+      // ammonite
+      initialCommands in (Test, console) := """ammonite.Main().run()"""
     )
   }
 
-  val testDeps = Seq(
-    "org.scalatest"   %% "scalatest"  % scalatestVersion % "test"
+  val commonDeps = Seq(
+    "com.lihaoyi"     % "ammonite"             % "0.8.0"          % "test" cross CrossVersion.full,
+    "org.scalatest"   %% "scalatest"           % scalatestVersion % "test"
   )
 }

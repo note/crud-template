@@ -26,7 +26,7 @@ lazy val web = (project in file("web"))
       "io.circe"          %% "circe-generic"                     % circeVersion,
       "io.circe"          %% "circe-parser"                      % circeVersion,
       "de.heikoseeberger" %% "akka-http-circe"                   % "1.10.1"
-    ) ++ Common.testDeps
+    ) ++ Common.commonDeps
   )
   .dependsOn(core)
 
@@ -36,5 +36,5 @@ lazy val core = (project in file("core"))
   .settings(
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats" % "0.8.1"
-    ) ++ Common.testDeps
+    ) ++ Common.commonDeps
   )
