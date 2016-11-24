@@ -7,17 +7,18 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import cats.data.Validated.{ Invalid, Valid }
 import de.heikoseeberger.akkahttpcirce.CirceSupport
-import net.michalsitko.crud.entity.{ UserId, SavedUser, User }
+import net.michalsitko.crud.entity.{ UserId, User }
 import net.michalsitko.crud.service.UserService
 
 import io.circe.generic.auto._
-import io.circe.syntax._
 
 import scala.concurrent.ExecutionContext
 import scala.util.{ Success, Failure }
 
 class UserController(userService: UserService)(implicit ec: ExecutionContext, materializer: ActorMaterializer)
     extends AnyRef with CirceSupport {
+
+  import net.michalsitko.format.Formats._
 
   val route =
     pathPrefix("user") {

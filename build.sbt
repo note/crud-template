@@ -21,12 +21,16 @@ lazy val web = (project in file("web"))
     buildInfoUsePackageAsPath := true,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http-experimental"            % akkaVersion,
+    // TODO: remove
       "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaVersion,
       "io.circe"          %% "circe-core"                        % circeVersion,
       "io.circe"          %% "circe-generic"                     % circeVersion,
       "io.circe"          %% "circe-parser"                      % circeVersion,
-      // as for now stable version uses cats 0.5.2 and we want to use the newest cats
-      "de.heikoseeberger" %% "akka-http-circe"                   % "1.11.0-M2"
+      // TODO: update to stable. as for now stable version uses cats 0.5.2 and we want to use the newest cats
+      "de.heikoseeberger" %% "akka-http-circe"                   % "1.11.0-M2",
+      "com.typesafe.akka"     %% "akka-http-experimental"        % akkaVersion % "test",
+      "io.gatling.highcharts" % "gatling-charts-highcharts"      % "2.2.3"     % "test",
+      "io.gatling"            % "gatling-test-framework"         % "2.2.3"     % "test"
     ) ++ Common.commonDeps
   )
   .dependsOn(core)
