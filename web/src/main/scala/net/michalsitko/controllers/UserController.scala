@@ -4,7 +4,6 @@ import java.util.UUID
 
 import akka.http.scaladsl.model.{ HttpResponse, StatusCodes }
 import akka.http.scaladsl.server.Directives._
-import akka.stream.ActorMaterializer
 import cats.data.Validated.{ Invalid, Valid }
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import net.michalsitko.crud.entity.{ UserId, User }
@@ -15,7 +14,7 @@ import io.circe.generic.auto._
 import scala.concurrent.ExecutionContext
 import scala.util.{ Success, Failure }
 
-class UserController(userService: UserService)(implicit ec: ExecutionContext, materializer: ActorMaterializer)
+class UserController(userService: UserService)(implicit ec: ExecutionContext)
     extends AnyRef with CirceSupport {
 
   import net.michalsitko.format.Formats._

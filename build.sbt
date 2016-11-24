@@ -28,7 +28,7 @@ lazy val web = (project in file("web"))
       "io.circe"          %% "circe-parser"                      % circeVersion,
       // TODO: update to stable. as for now stable version uses cats 0.5.2 and we want to use the newest cats
       "de.heikoseeberger" %% "akka-http-circe"                   % "1.11.0-M2",
-      "com.typesafe.akka"     %% "akka-http-experimental"        % akkaVersion % "test",
+      "com.typesafe.akka"     %% "akka-http-testkit"             % akkaVersion % "test",
       "io.gatling.highcharts" % "gatling-charts-highcharts"      % "2.2.3"     % "test",
       "io.gatling"            % "gatling-test-framework"         % "2.2.3"     % "test"
     ) ++ Common.commonDeps
