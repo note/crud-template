@@ -6,9 +6,11 @@ import akka.http.scaladsl.model.{ HttpResponse, StatusCodes }
 import akka.http.scaladsl.server.Directives._
 import cats.data.Validated.{ Invalid, Valid }
 import de.heikoseeberger.akkahttpcirce.CirceSupport
+import io.circe.Json
 import net.michalsitko.crud.entity.{ UserId, User }
 import net.michalsitko.crud.service.UserService
 
+import io.circe.syntax._
 import io.circe.generic.auto._
 
 import scala.concurrent.ExecutionContext
@@ -28,7 +30,8 @@ class UserController(userService: UserService)(implicit ec: ExecutionContext)
               complete(savedUser)
             case Success(Invalid(errors)) =>
               val msgs = errors.map(_.message)
-              complete(HttpResponse(StatusCodes.BadRequest, entity = msgs.toList.mkString(", ")))
+              val msgsJson = Json.obj("messages" -> msgs.toList.asJson)
+              complete(StatusCodes.BadRequest -> msgsJson)
             case Failure(e) =>
               complete(HttpResponse(StatusCodes.InternalServerError, entity = e.getMessage))
           }
