@@ -4,7 +4,9 @@ import java.util.UUID
 
 import cats.data.Validated.Valid
 import cats.data.{ NonEmptyList, Validated }
-import net.michalsitko.crud.entity.{ UserId, SavedUser, User }
+import net.michalsitko.crud.entity.{ SavedUser, User, UserId }
+import net.michalsitko.crud.service.UserService._
+import net.michalsitko.crud.service.impl.InMemoryUserService
 import org.scalatest.{ Matchers, WordSpec }
 
 import scala.concurrent.Await

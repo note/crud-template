@@ -5,13 +5,14 @@ import java.util.UUID
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.MalformedRequestContentRejection
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import cats.data.ValidatedNel
 import cats.data.Validated._
+import cats.data.ValidatedNel
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import io.circe.Json
 import io.circe.parser._
 import net.michalsitko.crud.entity.{ SavedUser, User, UserId }
-import net.michalsitko.crud.service.{ IncorrectEmail, UserSaveError, UserService }
+import net.michalsitko.crud.service.UserService
+import net.michalsitko.crud.service.UserService._
 import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpec }
 
 import scala.concurrent.Future

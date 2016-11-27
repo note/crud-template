@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import net.michalsitko.controllers.{ UserController, VersionController }
-import net.michalsitko.crud.service.InMemoryUserService
+import net.michalsitko.crud.service.impl.InMemoryUserService
 
 object WebServer extends AnyRef with CirceSupport with Services {
   def main(args: Array[String]) {
