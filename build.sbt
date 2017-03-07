@@ -24,11 +24,13 @@ lazy val web = (project in file("web"))
       "io.circe"          %% "circe-core"                        % circeVersion,
       "io.circe"          %% "circe-generic"                     % circeVersion,
       "io.circe"          %% "circe-parser"                      % circeVersion,
-      "de.heikoseeberger" %% "akka-http-circe"                   % "1.11.0",
+      "de.heikoseeberger" %% "akka-http-circe"                   % "1.12.0",
       "com.typesafe.akka"     %% "akka-http-testkit"             % akkaHttpVersion % "test",
       "io.gatling.highcharts" % "gatling-charts-highcharts"      % gatlingVersion  % "test",
-      "io.gatling"            % "gatling-test-framework"         % gatlingVersion  % "test"
-    ) ++ Common.commonDeps
+      "io.gatling"            % "gatling-test-framework"         % gatlingVersion  % "test",
+      "com.lihaoyi"           % "ammonite"                       % "0.8.2"         % "test" cross CrossVersion.full
+    ) ++ Common.commonDeps,
+    initialCommands in (Test, console) := """ammonite.Main().run()"""
   )
   .dependsOn(core)
 
@@ -37,7 +39,7 @@ lazy val core = (project in file("core"))
   .commonSettings
   .settings(
     libraryDependencies ++= Seq(
-      "org.typelevel"              %% "cats"           % "0.8.1",
+      "org.typelevel"              %% "cats"           % catsVersion,
       "ch.qos.logback"             % "logback-classic" % "1.1.7",
       "com.typesafe.scala-logging" %% "scala-logging"  % "3.5.0"
     ) ++ Common.commonDeps
