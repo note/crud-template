@@ -27,10 +27,8 @@ lazy val web = (project in file("web"))
       "de.heikoseeberger" %% "akka-http-circe"                   % "1.12.0",
       "com.typesafe.akka"     %% "akka-http-testkit"             % akkaHttpVersion % "test",
       "io.gatling.highcharts" % "gatling-charts-highcharts"      % gatlingVersion  % "test",
-      "io.gatling"            % "gatling-test-framework"         % gatlingVersion  % "test",
-      "com.lihaoyi"           % "ammonite"                       % "0.8.2"         % "test" cross CrossVersion.full
-    ) ++ Common.commonDeps,
-    initialCommands in (Test, console) := """ammonite.Main().run()"""
+      "io.gatling"            % "gatling-test-framework"         % gatlingVersion  % "test"
+    ) ++ Common.commonDeps
   )
   .dependsOn(core)
 
