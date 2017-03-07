@@ -27,7 +27,7 @@ class UserController(userService: UserService)(implicit ec: ExecutionContext)
         entity(as[User]) { user =>
           onComplete(userService.save(user)) {
             case Success(Valid(savedUser)) =>
-              complete(savedUser)
+              complete(StatusCodes.Created -> savedUser)
             case Success(Invalid(errors)) =>
               val msgs = errors.map(_.message)
               val msgsJson = Json.obj("messages" -> msgs.toList.asJson)

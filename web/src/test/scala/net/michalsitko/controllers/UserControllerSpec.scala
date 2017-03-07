@@ -33,7 +33,7 @@ class UserControllerSpec extends WordSpec with Matchers with ScalatestRouteTest 
       val postRequest = Post("/user", entity = HttpEntity(ContentTypes.`application/json`, json))
 
       postRequest ~> userController.route ~> check {
-        status should equal(StatusCodes.OK)
+        status should equal(StatusCodes.Created)
 
         // this way formatting and ordering of fields does not matter and we do not rely on formatters
         // in test assertions
