@@ -23,8 +23,14 @@ class GetUserSimulation extends Simulation with RequestTemplates {
         .body(createUserBody)
         .asJSON
         .check(
+          status.is(201),
           jsonPath("$.id").saveAs("userId")
         )
+    )
+    .exec(http("Get User")
+      // we are invoking interpolator explicitly as at http://stackoverflow.com/questions/39401213/disable-false-warning-possible-missing-interpolator
+        .get(f"/user/$${userId}")
+        .check(status.is(200))
     )
 
   setUp(scn.inject(rampUsers(50) over (20.seconds)).protocols(httpConf))
