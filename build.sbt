@@ -20,13 +20,13 @@ lazy val web = (project in file("web"))
     buildInfoPackage := "net.michalsitko",
     buildInfoUsePackageAsPath := true,
     libraryDependencies ++= Seq(
-      "com.typesafe.akka"   %% "akka-http"                         % akkaHttpVersion,
-      "io.circe"            %% "circe-core"                        % circeVersion,
-      "io.circe"            %% "circe-generic"                     % circeVersion,
-      "io.circe"            %% "circe-parser"                      % circeVersion,
-      "de.heikoseeberger"   %% "akka-http-circe"                   % "1.12.0",
-      "com.github.melrief"  %% "pureconfig"                        % "0.6.0",
-      "com.typesafe.akka"     %% "akka-http-testkit"             % akkaHttpVersion % "test"
+      "com.typesafe.akka"     %% "akka-http"                        % akkaHttpVersion,
+      "io.circe"              %% "circe-core"                       % circeVersion,
+      "io.circe"              %% "circe-generic"                    % circeVersion,
+      "io.circe"              %% "circe-parser"                     % circeVersion,
+      "de.heikoseeberger"     %% "akka-http-circe"                  % "1.14.0",
+      "com.github.melrief"    %% "pureconfig"                       % "0.6.0",
+      "com.typesafe.akka"     %% "akka-http-testkit"                % akkaHttpVersion % "test"
     ) ++ Common.commonDeps
   )
   .dependsOn(core)

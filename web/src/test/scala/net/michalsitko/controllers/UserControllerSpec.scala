@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.MalformedRequestContentRejection
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import cats.data.Validated._
 import cats.data.ValidatedNel
-import de.heikoseeberger.akkahttpcirce.CirceSupport
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import io.circe.parser._
 import net.michalsitko.crud.entity.{ SavedUser, User, UserId }
@@ -17,7 +17,7 @@ import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpec }
 
 import scala.concurrent.Future
 
-class UserControllerSpec extends WordSpec with Matchers with ScalatestRouteTest with BeforeAndAfterAll with CirceSupport {
+class UserControllerSpec extends WordSpec with Matchers with ScalatestRouteTest with BeforeAndAfterAll with FailFastCirceSupport {
 
   "UserController POST" should {
     "return saved user if input is correct" in new Context {

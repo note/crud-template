@@ -5,20 +5,18 @@ import java.util.UUID
 import akka.http.scaladsl.model.{ HttpResponse, StatusCodes }
 import akka.http.scaladsl.server.Directives._
 import cats.data.Validated.{ Invalid, Valid }
-import de.heikoseeberger.akkahttpcirce.CirceSupport
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
-import net.michalsitko.crud.entity.{ UserId, User }
+import io.circe.generic.auto._
+import io.circe.syntax._
+import net.michalsitko.crud.entity.{ User, UserId }
 import net.michalsitko.crud.service.UserService
 
-import io.circe.syntax._
-import io.circe.generic.auto._
-
 import scala.concurrent.ExecutionContext
-import scala.util.{ Success, Failure }
+import scala.util.{ Failure, Success }
 
 class UserController(userService: UserService)(implicit ec: ExecutionContext)
-    extends AnyRef with CirceSupport {
-
+    extends AnyRef with FailFastCirceSupport {
   import net.michalsitko.format.Formats._
 
   val route =

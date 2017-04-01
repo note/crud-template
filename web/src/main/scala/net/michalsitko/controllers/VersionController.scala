@@ -2,11 +2,11 @@ package net.michalsitko.controllers
 
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
-import de.heikoseeberger.akkahttpcirce.CirceSupport
-import io.circe.{ Json, Encoder }
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+import io.circe.{ Encoder, Json }
 import net.michalsitko.BuildInfo
 
-class VersionController(implicit materializer: ActorMaterializer) extends AnyRef with CirceSupport {
+class VersionController(implicit materializer: ActorMaterializer) extends AnyRef with FailFastCirceSupport {
 
   val route =
     path("version") {
