@@ -14,7 +14,7 @@ import scala.collection.mutable
 import scala.concurrent.Future
 
 class InMemoryUserService extends UserService {
-  private var users = mutable.Map.empty[UserId, SavedUser]
+  private val users = mutable.Map.empty[UserId, SavedUser]
 
   override def save(user: User): Future[ValidatedNel[UserSaveError, SavedUser]] = {
     Future.successful(validate(user).map { validUser =>

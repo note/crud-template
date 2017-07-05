@@ -25,7 +25,7 @@ lazy val web = (project in file("web"))
       "io.circe"              %% "circe-generic"                    % circeVersion,
       "io.circe"              %% "circe-parser"                     % circeVersion,
       "de.heikoseeberger"     %% "akka-http-circe"                  % "1.14.0",
-      "com.github.melrief"    %% "pureconfig"                       % "0.6.0",
+      "com.github.pureconfig" %% "pureconfig"                       % pureconfigVersion,
       "com.typesafe.akka"     %% "akka-http-testkit"                % akkaHttpVersion % "test"
     ) ++ Common.commonDeps
   )
@@ -52,6 +52,7 @@ lazy val gatling = (project in file("gatling"))
   .enablePlugins(GatlingPlugin)
   .commonSettings
   .settings(
-    libraryDependencies ++= gatlingDeps
+    // there's no gatling published built with scala 2.12
+    scalaVersion := "2.11.11",
+    libraryDependencies ++= gatlingDeps ++ List("com.github.pureconfig" %% "pureconfig" % pureconfigVersion)
   )
-  .dependsOn(web % "compile->compile")

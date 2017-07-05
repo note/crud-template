@@ -12,10 +12,9 @@ import io.circe.syntax._
 import net.michalsitko.crud.entity.{ User, UserId }
 import net.michalsitko.crud.service.UserService
 
-import scala.concurrent.ExecutionContext
 import scala.util.{ Failure, Success }
 
-class UserController(userService: UserService)(implicit ec: ExecutionContext)
+class UserController(userService: UserService)
     extends AnyRef with FailFastCirceSupport {
   import net.michalsitko.format.Formats._
 
