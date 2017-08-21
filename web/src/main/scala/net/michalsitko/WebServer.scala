@@ -3,20 +3,21 @@ package net.michalsitko
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
-import akka.http.scaladsl.model.{ HttpRequest, HttpResponse, StatusCodes }
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
 import akka.http.scaladsl.settings.ConnectionPoolSettings
 import akka.stream._
 import akka.stream.contrib.Retry
-import akka.stream.scaladsl.{ Flow, Sink, Source }
+import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.stream.stage._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.StrictLogging
 import net.michalsitko.crud.service.impl.InMemoryUserService
+import net.michalsitko.generic.Services
 
 import scala.concurrent.duration._
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
-case class State(request: HttpRequest, response: Option[Try[HttpResponse]], attemptsLeft: Int, attemptsPerformed: Int, screeningId: Long)
+case class State(request: HttpRequest, attemptsLeft: Int, attemptsPerformed: Int, screeningId: Long)
 
 class ExponentialBackoff extends GraphStage[FlowShape[(HttpRequest, State), (HttpRequest, State)]] {
   // inlets/outlets names ("MyFilter.in" and "MyFilter.out" in this case)
@@ -106,7 +107,7 @@ object WebServer extends AnyRef with Services with StrictLogging with RequestBui
     }
 
     val mainFlow = Source(List((request(500), 88), (request(200), 88), (request(501), 88), (request(201), 88)))
-      .map(r => (r._1, State(r._1, None, 3, 0, r._2)))
+      .map(r => (r._1, State(r._1, 3, 0, r._2)))
       .via(httpPool)
       // state information is useless for rest of processing pipeline - get rid of it
       .map(extractResponseAndScreeningId)
