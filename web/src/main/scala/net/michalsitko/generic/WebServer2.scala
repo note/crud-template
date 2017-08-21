@@ -4,16 +4,13 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
-import akka.http.scaladsl.settings.ConnectionPoolSettings
+import akka.http.scaladsl.model.{ HttpRequest, HttpResponse }
 import akka.stream._
-import akka.stream.scaladsl.{Flow, Sink, Source}
-import com.typesafe.config.ConfigFactory
+import akka.stream.scaladsl.{ Flow, Sink, Source }
 import com.typesafe.scalalogging.StrictLogging
 import net.michalsitko.crud.service.impl.InMemoryUserService
-import net.michalsitko.{MyRetry, State}
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 object WebServer extends AnyRef with Services with StrictLogging with RequestBuilding {
   def main(args: Array[String]) {
@@ -31,7 +28,8 @@ object WebServer extends AnyRef with Services with StrictLogging with RequestBui
     val withRetry: Flow[(HttpRequest, State[(HttpRequest, Long)]), (Try[HttpResponse], Long), NotUsed] = RetryWithExponentialBackoff(2)(httpPool)
 
     val mainFlow =
-      Source(List((request(500), 88), (request(200), 88), (request(501), 88), (request(201), 88)))
+      Source(List((request(500), 88L), (request(200), 88L), (request(501), 88L), (request(201), 88L)))
+        .map(t => (t._1, State((t._1, t._2), 2, 0)))
         .via(withRetry)
 
     val resF = mainFlow.runWith(Sink.seq)

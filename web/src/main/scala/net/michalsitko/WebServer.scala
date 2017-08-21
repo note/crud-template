@@ -3,11 +3,11 @@ package net.michalsitko
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.{ HttpRequest, HttpResponse, StatusCodes }
 import akka.http.scaladsl.settings.ConnectionPoolSettings
 import akka.stream._
 import akka.stream.contrib.Retry
-import akka.stream.scaladsl.{Flow, Sink, Source}
+import akka.stream.scaladsl.{ Flow, Sink, Source }
 import akka.stream.stage._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.StrictLogging
@@ -15,7 +15,7 @@ import net.michalsitko.crud.service.impl.InMemoryUserService
 import net.michalsitko.generic.Services
 
 import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 case class State(request: HttpRequest, attemptsLeft: Int, attemptsPerformed: Int, screeningId: Long)
 

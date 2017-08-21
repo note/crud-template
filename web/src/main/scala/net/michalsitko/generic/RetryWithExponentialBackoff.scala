@@ -61,7 +61,7 @@ object RetryWithExponentialBackoff {
       .map(state => (state.originalElement._1, state))
       .via(flow)
 
-    val withRetry = MyRetry (withBackoff) {
+    val withRetry = MyRetry(withBackoff) {
       case state if (state.attemptsLeft < 1) =>
         None
       case state =>
@@ -72,18 +72,18 @@ object RetryWithExponentialBackoff {
     Flow.fromGraph(withRetry)
       .map(t => (t._1, t._2.originalElement._2))
 
-//    val f: Flow[I, State[IC], NotUsed] = Flow[I].map(el => State(el, retriesNumber + 1, 0))
-//
-//    val withBackoff = f.via(backoffFlow).map(state => (state.originalElement, state))
-//
-//    val f2: Flow[I, O, NotUsed] = withBackoff.via(flow)
-//
-//    MyRetry(f2) {
-//      case state if (state.attemptsLeft < 1) =>
-//        None
-//      case state =>
-//        val newState = state.copy(attemptsLeft = state.attemptsLeft - 1, attemptsPerformed = state.attemptsPerformed + 1)
-//        Some((state.request, newState))
-//    }
+    //    val f: Flow[I, State[IC], NotUsed] = Flow[I].map(el => State(el, retriesNumber + 1, 0))
+    //
+    //    val withBackoff = f.via(backoffFlow).map(state => (state.originalElement, state))
+    //
+    //    val f2: Flow[I, O, NotUsed] = withBackoff.via(flow)
+    //
+    //    MyRetry(f2) {
+    //      case state if (state.attemptsLeft < 1) =>
+    //        None
+    //      case state =>
+    //        val newState = state.copy(attemptsLeft = state.attemptsLeft - 1, attemptsPerformed = state.attemptsPerformed + 1)
+    //        Some((state.request, newState))
+    //    }
   }
 }
