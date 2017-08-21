@@ -26,6 +26,11 @@ lazy val web = (project in file("web"))
       "io.circe"              %% "circe-parser"                     % circeVersion,
       "de.heikoseeberger"     %% "akka-http-circe"                  % "1.17.0",
       "com.github.pureconfig" %% "pureconfig"                       % pureconfigVersion,
+      // needed for Restart
+      "com.typesafe.akka"     %% "akka-stream-contrib"              % "0.8",
+
+      // needed for RestartFlow
+      "com.typesafe.akka"     %% "akka-stream"                      % "2.5.4",
       "com.typesafe.akka"     %% "akka-http-testkit"                % akkaHttpVersion % "test"
     ) ++ Common.commonDeps
   )

@@ -1,16 +1,21 @@
 package net.michalsitko.controllers
 
+import akka.http.scaladsl.HttpExt
+import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.server.Directives._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Encoder
 import net.michalsitko.BuildInfo
 
-class VersionController extends AnyRef with FailFastCirceSupport {
+class VersionController(http: HttpExt) extends AnyRef with FailFastCirceSupport with RequestBuilding {
 
   val route =
     path("version") {
       get {
-        complete(BuildInfo)
+        complete {
+          println("hello. i am client")
+          BuildInfo
+        }
       }
     }
 
