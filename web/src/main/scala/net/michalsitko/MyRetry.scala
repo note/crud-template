@@ -7,7 +7,7 @@ import akka.stream.stage._
 import scala.util.{ Success, Try }
 
 /**
- * This object defines a factory methods for retry operaions.
+ * Heavily inspired by https://github.com/akka/akka-stream-contrib/blob/master/contrib/src/main/scala/akka/stream/contrib/Retry.scala
  */
 object MyRetry {
 
@@ -23,14 +23,6 @@ object MyRetry {
    * The given flow must not change the number of elements passing through it (i.e. it should output
    * exactly one element for every received element). Ignoring this, will have an unpredicted result,
    * and may result in a deadlock.
-   *
-   * @param flow      the flow to retry
-   * @param retryWith if output was failure, we can optionaly recover from it,
-   *                  and retry with a new pair of input & new state we get from this function.
-   * @tparam I input elements type
-   * @tparam O output elements type
-   * @tparam S state to create a new `(I,S)` to retry with
-   * @tparam M materialized value type
    */
   def apply[I, O, S, M](flow: Graph[FlowShape[(I, S), (Try[O], S)], M])(retryWith: S => Option[(I, S)]): Graph[FlowShape[(I, S), (Try[O], S)], M] = {
     GraphDSL.create(flow) { implicit b => origFlow =>
@@ -57,17 +49,13 @@ object MyRetry {
 
       setHandler(in1, new InHandler {
         override def onPush() = {
-          println("in1 on push")
           val is = grab(in1)
-          //          if (!hasBeenPulled(in2)) pull(in2)
           push(out2, is)
           elementsInCycle += 1
         }
 
         override def onUpstreamFinish() = {
-          println("onUpstreamFinish")
           if (elementsInCycle == 0) {
-            println("calling completeStage in onUpstreamFinish")
             completeStage()
           }
         }
@@ -75,7 +63,6 @@ object MyRetry {
 
       setHandler(out1, new OutHandler {
         override def onPull() = {
-          println("out1 onpull")
           if (isAvailable(out2) && isAvailable(in1)) pull(in1)
           else pull(in2)
         }
@@ -98,16 +85,13 @@ object MyRetry {
       def pushAndCompleteIfLast(elem: (Try[O], S)): Unit = {
         push(out1, elem)
         elementsInCycle -= 1
-        println("elementsInCycle: " + elementsInCycle)
         if (elementsInCycle == 0) {
-          println("zero in cycle")
           completeStage()
         }
       }
 
       setHandler(out2, new OutHandler {
         override def onPull() = {
-          println("out2 onpull")
           if (isAvailable(out1)) {
             if (pending.nonEmpty) {
               push(out2, pending.head)

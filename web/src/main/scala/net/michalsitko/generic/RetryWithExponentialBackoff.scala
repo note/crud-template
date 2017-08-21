@@ -25,7 +25,7 @@ class ExponentialBackoff[T] extends GraphStage[FlowShape[State[T], State[T]]] {
           push(output, element)
         } else {
           val timeToWait = Math.pow(2.0, element.attemptsPerformed - 1).toInt.seconds
-          // is it safe to use element as timer key? or should we enrich it wich something unique?
+          // is it safe to use element as timer key? or should we enrich it with something unique?
           scheduleOnce(element, timeToWait)
           pull(input)
         }
@@ -50,14 +50,21 @@ class ExponentialBackoff[T] extends GraphStage[FlowShape[State[T], State[T]]] {
 object RetryWithExponentialBackoff {
   type DetectFailureFn[I, C, O] = ((Try[O], State[(I, C)])) => (Try[O], State[(I, C)])
 
-  // I - (In, Ctx)
-  def apply[I, C, O, M](detectFailure: DetectFailureFn[I, C, O], retriesNumber: Int)(flow: Flow[(I, State[(I, C)]), (Try[O], State[(I, C)]), M]) = {
+  /**
+    * It's mostly designed with akka-http's `Http().cachedHostConnectionPool` in mind
+    *
+    * type Correlation stands for what's described in akka-http:
+    *
+    * In order to allow for easy response-to-request association the flow takes in a custom, opaque context
+    * object of type `T` from the application which is emitted together with the corresponding response.
+    */
+  def apply[I, Correlation, O, M](detectFailure: DetectFailureFn[I, Correlation, O], retriesNumber: Int)(flow: Flow[(I, State[(I, Correlation)]), (Try[O], State[(I, Correlation)]), M]) = {
     val backoffFlow = {
-      val backoff = new ExponentialBackoff[(I, C)]
+      val backoff = new ExponentialBackoff[(I, Correlation)]
       Flow.fromGraph(backoff)
     }
 
-    val withBackoff = Flow[(I, State[(I, C)])]
+    val withBackoff = Flow[(I, State[(I, Correlation)])]
       .map { case (_, state) => state }
       .via(backoffFlow)
       .map(state => (state.originalElement._1, state))
@@ -72,25 +79,11 @@ object RetryWithExponentialBackoff {
         Some((state.originalElement._1, newState))
     }
 
-    val f: Flow[(I, State[(I, C)]), (Try[O], C), NotUsed] = Flow.fromGraph(withRetry)
+    val f: Flow[(I, State[(I, Correlation)]), (Try[O], Correlation), NotUsed] = Flow.fromGraph(withRetry)
       .map(t => (t._1, t._2.originalElement._2))
 
-    Flow[(I, C)]
+    Flow[(I, Correlation)]
       .map(t => (t._1, State((t._1, t._2), retriesNumber + 1, 0)))
       .via(f)
-
-    //    val f: Flow[I, State[IC], NotUsed] = Flow[I].map(el => State(el, retriesNumber + 1, 0))
-    //
-    //    val withBackoff = f.via(backoffFlow).map(state => (state.originalElement, state))
-    //
-    //    val f2: Flow[I, O, NotUsed] = withBackoff.via(flow)
-    //
-    //    MyRetry(f2) {
-    //      case state if (state.attemptsLeft < 1) =>
-    //        None
-    //      case state =>
-    //        val newState = state.copy(attemptsLeft = state.attemptsLeft - 1, attemptsPerformed = state.attemptsPerformed + 1)
-    //        Some((state.request, newState))
-    //    }
   }
 }
