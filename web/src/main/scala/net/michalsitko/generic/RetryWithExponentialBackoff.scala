@@ -48,8 +48,10 @@ class ExponentialBackoff[T] extends GraphStage[FlowShape[State[T], State[T]]] {
 }
 
 object RetryWithExponentialBackoff {
+  type DetectFailureFn[I, C, O] = ((Try[O], State[(I, C)])) => (Try[O], State[(I, C)])
+
   // I - (In, Ctx)
-  def apply[I, C, O, M](retriesNumber: Int)(flow: Flow[(I, State[(I, C)]), (Try[O], State[(I, C)]), M]) = {
+  def apply[I, C, O, M](detectFailure: DetectFailureFn[I, C, O], retriesNumber: Int)(flow: Flow[(I, State[(I, C)]), (Try[O], State[(I, C)]), M]) = {
     val backoffFlow = {
       val backoff = new ExponentialBackoff[(I, C)]
       Flow.fromGraph(backoff)
@@ -60,6 +62,7 @@ object RetryWithExponentialBackoff {
       .via(backoffFlow)
       .map(state => (state.originalElement._1, state))
       .via(flow)
+      .map(detectFailure)
 
     val withRetry = MyRetry(withBackoff) {
       case state if (state.attemptsLeft < 1) =>
@@ -69,8 +72,12 @@ object RetryWithExponentialBackoff {
         Some((state.originalElement._1, newState))
     }
 
-    Flow.fromGraph(withRetry)
+    val f: Flow[(I, State[(I, C)]), (Try[O], C), NotUsed] = Flow.fromGraph(withRetry)
       .map(t => (t._1, t._2.originalElement._2))
+
+    Flow[(I, C)]
+      .map(t => (t._1, State((t._1, t._2), retriesNumber + 1, 0)))
+      .via(f)
 
     //    val f: Flow[I, State[IC], NotUsed] = Flow[I].map(el => State(el, retriesNumber + 1, 0))
     //

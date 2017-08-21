@@ -4,13 +4,13 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
-import akka.http.scaladsl.model.{ HttpRequest, HttpResponse }
+import akka.http.scaladsl.model.{ HttpRequest, HttpResponse, StatusCodes }
 import akka.stream._
 import akka.stream.scaladsl.{ Flow, Sink, Source }
 import com.typesafe.scalalogging.StrictLogging
 import net.michalsitko.crud.service.impl.InMemoryUserService
 
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
 object WebServer extends AnyRef with Services with StrictLogging with RequestBuilding {
   def main(args: Array[String]) {
@@ -25,11 +25,10 @@ object WebServer extends AnyRef with Services with StrictLogging with RequestBui
     def request(code: Int) = Get(s"http://localhost:8080/version?code=$code")
     val httpPool = Http().cachedHostConnectionPool[State[(HttpRequest, Long)]]("localhost", 8080)
 
-    val withRetry: Flow[(HttpRequest, State[(HttpRequest, Long)]), (Try[HttpResponse], Long), NotUsed] = RetryWithExponentialBackoff(2)(httpPool)
+    val withRetry = RetryWithExponentialBackoff(detectFailure, 2)(httpPool)
 
     val mainFlow =
       Source(List((request(500), 88L), (request(200), 88L), (request(501), 88L), (request(201), 88L)))
-        .map(t => (t._1, State((t._1, t._2), 2, 0)))
         .via(withRetry)
 
     val resF = mainFlow.runWith(Sink.seq)
@@ -41,6 +40,12 @@ object WebServer extends AnyRef with Services with StrictLogging with RequestBui
       materializer.shutdown()
       system.terminate()
     }
+  }
+
+  private val detectFailure: ((Try[HttpResponse], State[(HttpRequest, Long)])) => (Try[HttpResponse], State[(HttpRequest, Long)]) = {
+    case (Success(response), state) if response.status == StatusCodes.InternalServerError || response.status == StatusCodes.NotImplemented =>
+      (Failure(new RuntimeException("internal server error: " + response.status.intValue())), state)
+    case anyOther => anyOther
   }
 }
 
