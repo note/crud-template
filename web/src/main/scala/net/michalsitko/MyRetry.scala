@@ -66,8 +66,10 @@ object MyRetry {
 
         override def onUpstreamFinish() = {
           println("onUpstreamFinish")
-          if (elementsInCycle == 0)
+          if (elementsInCycle == 0) {
+            println("calling completeStage in onUpstreamFinish")
             completeStage()
+          }
         }
       })
 
@@ -110,7 +112,7 @@ object MyRetry {
             if (pending.nonEmpty) {
               push(out2, pending.head)
               pending = pending.tail
-            } else if (!hasBeenPulled(in1)) {
+            } else if (!hasBeenPulled(in1) && !isClosed(in1)) {
               pull(in1)
             }
           }

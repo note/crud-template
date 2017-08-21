@@ -43,7 +43,11 @@ class ExponentialBackoff extends GraphStage[FlowShape[(HttpRequest, State), (Htt
     })
 
     setHandler(output, new OutHandler {
-      override def onPull() = pull(input)
+      override def onPull() = {
+        if (!hasBeenPulled(input)) {
+          pull(input)
+        }
+      }
     })
 
     override protected def onTimer(element: Any): Unit = {
@@ -71,12 +75,8 @@ object WebServer extends AnyRef with Services with StrictLogging with RequestBui
     def request(code: Int) = Get(s"http://localhost:8080/version?code=$code")
 
     val httpPool = {
-
-      //      Flow[(HttpRequest, State)
-      //        .delay()
-
-      //      val backoff = new ExponentialBackoff
-      //      val backoffFlow = Flow.fromGraph(backoff)
+      val backoff = new ExponentialBackoff
+      val backoffFlow = Flow.fromGraph(backoff)
 
       val poolSettings = {
         val confRoot = ConfigFactory.load
@@ -84,14 +84,14 @@ object WebServer extends AnyRef with Services with StrictLogging with RequestBui
       }
 
       println("settings: " + poolSettings)
-      val rawPool = //backoffFlow.via(Http().cachedHostConnectionPool[State]("localhost", 8080, poolSettings))
-        Http().cachedHostConnectionPool[State]("localhost", 8080, poolSettings)
+      val rawPool = backoffFlow.via(Http().cachedHostConnectionPool[State]("localhost", 8080, poolSettings))
+      //        Http().cachedHostConnectionPool[State]("localhost", 8080, poolSettings)
 
       // here we define what Failure means
       val poolWithFailureDetection =
         rawPool.map {
           case (Success(response), state) if response.status == StatusCodes.InternalServerError || response.status == StatusCodes.NotImplemented =>
-            (Failure(new RuntimeException("internal server error")), state)
+            (Failure(new RuntimeException("internal server error: " + response.status.intValue())), state)
           case anyOther => anyOther
         }
 
@@ -106,7 +106,7 @@ object WebServer extends AnyRef with Services with StrictLogging with RequestBui
     }
 
     val mainFlow = Source(List((request(500), 88), (request(200), 88), (request(501), 88), (request(201), 88)))
-      .map(r => (r._1, State(r._1, None, 0, 0, r._2)))
+      .map(r => (r._1, State(r._1, None, 3, 0, r._2)))
       .via(httpPool)
       // state information is useless for rest of processing pipeline - get rid of it
       .map(extractResponseAndScreeningId)
