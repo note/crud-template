@@ -1,10 +1,9 @@
 package net.michalsitko.generic
 
 import akka.NotUsed
-import akka.http.scaladsl.model.HttpRequest
+import akka.stream._
 import akka.stream.scaladsl.Flow
 import akka.stream.stage._
-import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
 import net.michalsitko.MyRetry
 
 import scala.concurrent.duration._
@@ -48,59 +47,32 @@ class ExponentialBackoff[T] extends GraphStage[FlowShape[State[T], State[T]]] {
 
 }
 
-trait Protocol {
-  type Request
-  type Response
-}
-
-
-trait ReqWithCorrelationId[T] {
-  type Req
-  type CorrelationId
-
-  def req: Req
-  def correlationId: CorrelationId
-}
-
-object ReqWithCorrelationId {
-  def httpReqWithScreeningId(t: (HttpRequest, Long)) = new ReqWithCorrelationId[(HttpRequest, Long)] {
-    override type Req = HttpRequest
-    override type CorrelationId = Long
-
-    override def req: Req = t._1
-
-    override def correlationId: CorrelationId = t._2
-  }
-}
-
-
 object RetryWithExponentialBackoff {
   // I - (In, Ctx)
-  def apply[I : ReqWithCorrelationId, O](retriesNumber: Int)(flow: Flow[(I, State[I]), (Try[O], State[I]), NotUsed]): Flow[(I, State[I]), (Try[O], I), NotUsed] = {
-    val backoffFlow: Flow[State[I], State[I], NotUsed] = {
-      val backoff = new ExponentialBackoff[I]
+  def apply[I, C, O, M](retriesNumber: Int)(flow: Flow[(I, State[(I, C)]), (Try[O], State[(I, C)]), M]) = {
+    val backoffFlow = {
+      val backoff = new ExponentialBackoff[(I, C)]
       Flow.fromGraph(backoff)
     }
 
-    val withBackoff: Flow[(I, State[I]), (Try[O], State[I]), NotUsed] = Flow[(I, State[I])]
+    val withBackoff = Flow[(I, State[(I, C)])]
       .map { case (_, state) => state }
       .via(backoffFlow)
-      .map(state => (state.originalElement, state))
+      .map(state => (state.originalElement._1, state))
       .via(flow)
-//      .via(flow)
 
     val withRetry = MyRetry (withBackoff) {
       case state if (state.attemptsLeft < 1) =>
         None
       case state =>
         val newState = state.copy(attemptsLeft = state.attemptsLeft - 1, attemptsPerformed = state.attemptsPerformed + 1)
-        Some((state.originalElement, newState))
+        Some((state.originalElement._1, newState))
     }
 
     Flow.fromGraph(withRetry)
-      .map(t => (t._1, t._2.originalElement))
+      .map(t => (t._1, t._2.originalElement._2))
 
-//    val f: Flow[I, State[I], NotUsed] = Flow[I].map(el => State(el, retriesNumber + 1, 0))
+//    val f: Flow[I, State[IC], NotUsed] = Flow[I].map(el => State(el, retriesNumber + 1, 0))
 //
 //    val withBackoff = f.via(backoffFlow).map(state => (state.originalElement, state))
 //

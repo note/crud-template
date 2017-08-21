@@ -1,5 +1,6 @@
 package net.michalsitko.generic
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
@@ -25,14 +26,13 @@ object WebServer extends AnyRef with Services with StrictLogging with RequestBui
     logger.info("Initializing application ...")
 
     def request(code: Int) = Get(s"http://localhost:8080/version?code=$code")
-    val httpPool: Flow[(HttpRequest, State[(HttpRequest, Long)]), (Try[HttpResponse], State[(HttpRequest, Long)]), Http.HostConnectionPool] = Http().cachedHostConnectionPool[State[(HttpRequest, Long)]]("localhost", 8080)
+    val httpPool = Http().cachedHostConnectionPool[State[(HttpRequest, Long)]]("localhost", 8080)
 
-    val withRetry = RetryWithExponentialBackoff[(HttpRequest, Long), HttpResponse](2)(httpPool)
+    val withRetry: Flow[(HttpRequest, State[(HttpRequest, Long)]), (Try[HttpResponse], Long), NotUsed] = RetryWithExponentialBackoff(2)(httpPool)
 
-    val mainFlow = Source(List((request(500), 88), (request(200), 88), (request(501), 88), (request(201), 88)))
-      .via(withRetry)
-      // state information is useless for rest of processing pipeline - get rid of it
-      .map(extractResponseAndScreeningId)
+    val mainFlow =
+      Source(List((request(500), 88), (request(200), 88), (request(501), 88), (request(201), 88)))
+        .via(withRetry)
 
     val resF = mainFlow.runWith(Sink.seq)
 
