@@ -2,8 +2,9 @@ package net.michalsitko.controllers
 
 import java.util.UUID
 
-import akka.http.scaladsl.model.{ HttpResponse, StatusCodes }
+import akka.http.scaladsl.model.{ ContentTypes, HttpEntity, HttpResponse, StatusCodes }
 import akka.http.scaladsl.server.Directives._
+import akka.stream.scaladsl.Flow
 import cats.data.Validated.{ Invalid, Valid }
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
@@ -17,6 +18,10 @@ import scala.util.{ Failure, Success }
 class UserController(userService: UserService)
     extends AnyRef with FailFastCirceSupport {
   import net.michalsitko.format.Formats._
+
+  val singleFlow = Flow[Int]
+    .map(n => n * 2)
+    .map(n => HttpResponse(entity = HttpEntity(ContentTypes.`text/xml(UTF-8)`, n.toString)))
 
   val route =
     pathPrefix("user") {
@@ -48,4 +53,11 @@ class UserController(userService: UserService)
           }
         }
     }
+  //      path("singleFlow") {
+  //        get {
+  //          parameter("n") { n =>
+  //            complete
+  //          }
+  //        }
+  //      }
 }
