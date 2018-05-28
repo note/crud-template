@@ -23,7 +23,7 @@ object Common {
     "-Xlint"
   )
 
-  val commonScalaVersion = "2.12.2"
+  val commonScalaVersion = "2.12.6"
 
   implicit class ProjectFrom(project: Project) {
     def commonSettings: Project = project.settings(
@@ -40,7 +40,7 @@ object Common {
   }
 
   val commonDeps = Seq(
-    "com.lihaoyi"     % "ammonite"             % "0.9.9"          % "test" cross CrossVersion.full,
+    "com.lihaoyi"     % "ammonite"             % "1.1.2"          % "test" cross CrossVersion.full,
     "org.scalatest"   %% "scalatest"           % scalatestVersion % "test"
   )
 }

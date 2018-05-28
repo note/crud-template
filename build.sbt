@@ -24,7 +24,7 @@ lazy val web = (project in file("web"))
       "io.circe"              %% "circe-core"                       % circeVersion,
       "io.circe"              %% "circe-generic"                    % circeVersion,
       "io.circe"              %% "circe-parser"                     % circeVersion,
-      "de.heikoseeberger"     %% "akka-http-circe"                  % "1.17.0",
+      "de.heikoseeberger"     %% "akka-http-circe"                  % "1.20.1",
       "com.github.pureconfig" %% "pureconfig"                       % pureconfigVersion,
       "com.typesafe.akka"     %% "akka-http-testkit"                % akkaHttpVersion % "test"
     ) ++ Common.commonDeps
@@ -37,9 +37,9 @@ lazy val core = (project in file("core"))
   .settings(
     libraryDependencies ++= Seq(
       "org.typelevel"              %% "cats"           % catsVersion,
-      "com.softwaremill.quicklens" %% "quicklens"      % "1.4.8",
+      "com.softwaremill.quicklens" %% "quicklens"      % "1.4.11",
       "ch.qos.logback"             % "logback-classic" % "1.2.3",
-      "com.typesafe.scala-logging" %% "scala-logging"  % "3.6.0"
+      "com.typesafe.scala-logging" %% "scala-logging"  % "3.9.0"
     ) ++ Common.commonDeps
   )
 

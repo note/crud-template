@@ -15,7 +15,7 @@ import net.michalsitko.crud.service.UserService
 import scala.util.{ Failure, Success }
 
 class UserController(userService: UserService)
-    extends AnyRef with FailFastCirceSupport {
+  extends AnyRef with FailFastCirceSupport {
   import net.michalsitko.format.Formats._
 
   val route =
