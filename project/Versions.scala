@@ -3,6 +3,6 @@ object Versions {
   val circeVersion        = "0.9.3"
   val scalatestVersion    = "3.0.5"
   val gatlingVersion      = "2.2.5"
-  val catsVersion         = "0.9.0"
+  val monixVersion        = "3.0.0-RC1"
   val pureconfigVersion   = "0.9.1"
 }

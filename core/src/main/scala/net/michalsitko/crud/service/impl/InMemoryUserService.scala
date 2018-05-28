@@ -2,9 +2,10 @@ package net.michalsitko.crud.service.impl
 
 import java.util.UUID
 
+import cats.Applicative
 import cats.data.Validated.{ invalidNel, valid }
 import cats.data.ValidatedNel
-// TODO: find narrower import
+import cats.data.Validated._
 import cats.implicits._
 import net.michalsitko.crud.entity.{ SavedUser, User, UserId }
 import net.michalsitko.crud.service.UserService
@@ -30,7 +31,7 @@ class InMemoryUserService extends UserService {
   }
 
   private def validate(user: User): ValidatedNel[UserSaveError, User] =
-    (validateEmail(user.email) |@| validatePassword(user.password)).map { (_, _) => user }
+    Applicative[ValidatedNel[UserSaveError, ?]].map2(validateEmail(user.email), validatePassword(user.password))((_, _) => user)
 
   private val emailPattern = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$".r
 
@@ -41,7 +42,7 @@ class InMemoryUserService extends UserService {
     }
 
   private def validatePassword(password: String): ValidatedNel[UserSaveError, Unit] =
-    (validatePasswordFormat(password) |@| (validatePasswordLength(password))).map { (_, _) => () }
+    Applicative[ValidatedNel[UserSaveError, ?]].map2(validatePasswordFormat(password), validatePasswordLength(password))((_, _) => ())
 
   private def validatePasswordFormat(password: String): ValidatedNel[UserSaveError, Unit] =
     if (password.exists(_.isWhitespace)) {

@@ -36,10 +36,9 @@ lazy val core = (project in file("core"))
   .commonSettings
   .settings(
     libraryDependencies ++= Seq(
-      "org.typelevel"              %% "cats"           % catsVersion,
-      "com.softwaremill.quicklens" %% "quicklens"      % "1.4.11",
-      "ch.qos.logback"             % "logback-classic" % "1.2.3",
-      "com.typesafe.scala-logging" %% "scala-logging"  % "3.9.0"
+      "io.monix"                   %% "monix"             % monixVersion,
+      "ch.qos.logback"             %  "logback-classic"   % "1.2.3",
+      "com.typesafe.scala-logging" %% "scala-logging"     % "3.9.0"
     ) ++ Common.commonDeps
   )
 

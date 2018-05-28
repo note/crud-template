@@ -33,14 +33,11 @@ object Common {
       // git
       git.useGitDescribe := true,
       showCurrentGitBranch,
-
-      // ammonite
-      initialCommands in (Test, console) := """ammonite.Main().run()"""
+      addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6"),
     )
   }
 
   val commonDeps = Seq(
-    "com.lihaoyi"     % "ammonite"             % "1.1.2"          % "test" cross CrossVersion.full,
     "org.scalatest"   %% "scalatest"           % scalatestVersion % "test"
   )
 }
