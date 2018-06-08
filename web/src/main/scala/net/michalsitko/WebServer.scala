@@ -5,9 +5,10 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.StrictLogging
+import monix.execution.Scheduler
 import net.michalsitko.config.AppConfig
-import net.michalsitko.controllers.{ UserController, VersionController }
 import net.michalsitko.crud.service.impl.InMemoryUserService
+import net.michalsitko.routes.{ UserRoute, VersionRoute }
 import pureconfig._
 
 import scala.util.{ Failure, Success }
@@ -25,10 +26,12 @@ object WebServer extends AnyRef with Services with StrictLogging {
     val config = loadConfig[AppConfig]("app").right.get
 
     val route = {
-      val versionController = new VersionController
-      val userController = new UserController(userService)
+      implicit val scheduler = Scheduler(system.dispatcher)
 
-      versionController.route ~ userController.route
+      val versionRoute = new VersionRoute
+      val userRoute = new UserRoute(userService)
+
+      versionRoute.route ~ userRoute.route
     }
 
     val bindRes = Http().bindAndHandle(route, config.binding.host, config.binding.port)

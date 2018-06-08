@@ -1,4 +1,4 @@
-package net.michalsitko.controllers
+package net.michalsitko.routes
 
 import java.util.UUID
 
@@ -10,12 +10,11 @@ import cats.data.ValidatedNel
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import io.circe.parser._
+import monix.eval.Task
 import net.michalsitko.crud.entity.{ SavedUser, User, UserId }
 import net.michalsitko.crud.service.UserService
 import net.michalsitko.crud.service.UserService._
 import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpec }
-
-import scala.concurrent.Future
 
 class UserControllerSpec extends WordSpec with Matchers with ScalatestRouteTest with BeforeAndAfterAll with FailFastCirceSupport {
 
@@ -51,8 +50,8 @@ class UserControllerSpec extends WordSpec with Matchers with ScalatestRouteTest 
     }
 
     "return error messages for incorrect JSON" in new Context {
-      override def saveResult(user: User): Future[ValidatedNel[UserSaveError, SavedUser]] =
-        Future.successful(invalidNel(IncorrectEmail))
+      override def saveResult(user: User): Task[ValidatedNel[UserSaveError, SavedUser]] =
+        Task.now(invalidNel(IncorrectEmail))
 
       val json =
         """
@@ -69,8 +68,8 @@ class UserControllerSpec extends WordSpec with Matchers with ScalatestRouteTest 
     }
 
     "return error messages for inccorect input" in new Context {
-      override def saveResult(user: User): Future[ValidatedNel[UserSaveError, SavedUser]] =
-        Future.successful(invalidNel(IncorrectEmail))
+      override def saveResult(user: User): Task[ValidatedNel[UserSaveError, SavedUser]] =
+        Task.now(invalidNel(IncorrectEmail))
 
       val json =
         """
@@ -133,24 +132,24 @@ class UserControllerSpec extends WordSpec with Matchers with ScalatestRouteTest 
     val userId = UserId(UUID.randomUUID)
     val failingUserId = UserId(UUID.randomUUID)
 
-    def saveResult(user: User): Future[ValidatedNel[UserSaveError, SavedUser]] =
-      Future.successful(valid(SavedUser.fromUser(userId, user)))
+    def saveResult(user: User): Task[ValidatedNel[UserSaveError, SavedUser]] =
+      Task.now(valid(SavedUser.fromUser(userId, user)))
 
     val userService = new UserService {
-      override def save(user: User): Future[ValidatedNel[UserSaveError, SavedUser]] =
+      override def save(user: User): Task[ValidatedNel[UserSaveError, SavedUser]] =
         saveResult(user)
 
-      override def get(id: UserId): Future[Option[SavedUser]] = id match {
+      override def get(id: UserId): Task[Option[SavedUser]] = id match {
         case `userId` =>
           val user = User("aa@example.com", "111222333", "asfplrk")
-          Future.successful(Some(SavedUser.fromUser(userId, user)))
+          Task.now(Some(SavedUser.fromUser(userId, user)))
         case `failingUserId` =>
-          Future.failed(new NoSuchElementException)
+          Task.raiseError(new NoSuchElementException)
         case _ =>
-          Future.successful(None)
+          Task.now(None)
       }
     }
 
-    val userController = new UserController(userService)
+    val userController = new UserRoute(userService)
   }
 }

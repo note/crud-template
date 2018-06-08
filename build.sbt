@@ -1,7 +1,7 @@
 import com.typesafe.sbt.GitPlugin.autoImport._
 import sbt._
-import Common._
-import Versions._
+import Dependencies._
+import Settings._
 
 name := """crud-template"""
 
@@ -19,15 +19,7 @@ lazy val web = (project in file("web"))
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, git.baseVersion, git.gitHeadCommit),
     buildInfoPackage := "net.michalsitko",
     buildInfoUsePackageAsPath := true,
-    libraryDependencies ++= Seq(
-      "com.typesafe.akka"     %% "akka-http"                        % akkaHttpVersion,
-      "io.circe"              %% "circe-core"                       % circeVersion,
-      "io.circe"              %% "circe-generic"                    % circeVersion,
-      "io.circe"              %% "circe-parser"                     % circeVersion,
-      "de.heikoseeberger"     %% "akka-http-circe"                  % "1.20.1",
-      "com.github.pureconfig" %% "pureconfig"                       % pureconfigVersion,
-      "com.typesafe.akka"     %% "akka-http-testkit"                % akkaHttpVersion % "test"
-    ) ++ Common.commonDeps
+    libraryDependencies ++= akkaHttp ++ circe ++ Seq(pureconfig, akkaHttpTestkit, scalatest)
   )
   .dependsOn(core)
 
@@ -35,17 +27,8 @@ lazy val core = (project in file("core"))
   .enablePlugins(GitBranchPrompt)
   .commonSettings
   .settings(
-    libraryDependencies ++= Seq(
-      "io.monix"                   %% "monix"             % monixVersion,
-      "ch.qos.logback"             %  "logback-classic"   % "1.2.3",
-      "com.typesafe.scala-logging" %% "scala-logging"     % "3.9.0"
-    ) ++ Common.commonDeps
+    libraryDependencies ++= logging ++ Seq(monix)
   )
-
-lazy val gatlingDeps = Seq(
-  "io.gatling.highcharts" % "gatling-charts-highcharts" % gatlingVersion,
-  "io.gatling"            % "gatling-test-framework"    % gatlingVersion
-)
 
 lazy val gatling = (project in file("gatling"))
   .enablePlugins(GatlingPlugin)
@@ -53,5 +36,5 @@ lazy val gatling = (project in file("gatling"))
   .settings(
     // there's no gatling published built with scala 2.12
     scalaVersion := "2.11.11",
-    libraryDependencies ++= gatlingDeps ++ List("com.github.pureconfig" %% "pureconfig" % pureconfigVersion)
+    libraryDependencies ++= Dependencies.gatling ++ Seq(pureconfig)
   )

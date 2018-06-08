@@ -1,11 +1,8 @@
 import com.typesafe.sbt.GitPlugin.autoImport._
 import sbt._
 import sbt.Keys._
-import scoverage.ScoverageKeys._
-import scoverage.ScoverageSbtPlugin
-import Versions._
 
-object Common {
+object Settings {
   val commonScalacOptions = Seq(
     "-target:jvm-1.8",
     "-encoding", "UTF-8",
@@ -33,11 +30,8 @@ object Common {
       // git
       git.useGitDescribe := true,
       showCurrentGitBranch,
-      addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6"),
+      addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6")
     )
   }
 
-  val commonDeps = Seq(
-    "org.scalatest"   %% "scalatest"           % scalatestVersion % "test"
-  )
 }

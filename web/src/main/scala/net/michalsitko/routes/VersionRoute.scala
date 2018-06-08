@@ -1,11 +1,11 @@
-package net.michalsitko.controllers
+package net.michalsitko.routes
 
 import akka.http.scaladsl.server.Directives._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Encoder
 import net.michalsitko.BuildInfo
 
-class VersionController extends AnyRef with FailFastCirceSupport {
+class VersionRoute extends AnyRef with FailFastCirceSupport {
 
   val route =
     path("version") {

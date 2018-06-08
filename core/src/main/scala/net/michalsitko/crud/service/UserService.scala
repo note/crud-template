@@ -1,15 +1,14 @@
 package net.michalsitko.crud.service
 
 import cats.data.ValidatedNel
+import monix.eval.Task
 import net.michalsitko.crud.entity.{ SavedUser, User, UserId }
-
-import scala.concurrent.Future
 
 trait UserService {
   import UserService._
 
-  def save(user: User): Future[ValidatedNel[UserSaveError, SavedUser]]
-  def get(userId: UserId): Future[Option[SavedUser]]
+  def save(user: User): Task[ValidatedNel[UserSaveError, SavedUser]]
+  def get(userId: UserId): Task[Option[SavedUser]]
 }
 
 object UserService {

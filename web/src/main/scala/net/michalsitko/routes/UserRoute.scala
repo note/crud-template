@@ -1,4 +1,4 @@
-package net.michalsitko.controllers
+package net.michalsitko.routes
 
 import java.util.UUID
 
@@ -7,14 +7,14 @@ import akka.http.scaladsl.server.Directives._
 import cats.data.Validated.{ Invalid, Valid }
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
-import io.circe.generic.auto._
 import io.circe.syntax._
+import monix.execution.Scheduler
 import net.michalsitko.crud.entity.{ User, UserId }
 import net.michalsitko.crud.service.UserService
 
 import scala.util.{ Failure, Success }
 
-class UserController(userService: UserService)
+class UserRoute(userService: UserService)(implicit scheduler: Scheduler)
   extends AnyRef with FailFastCirceSupport {
   import net.michalsitko.format.Formats._
 
@@ -22,7 +22,8 @@ class UserController(userService: UserService)
     pathPrefix("user") {
       post {
         entity(as[User]) { user =>
-          onComplete(userService.save(user)) {
+          // TODO: check if runAsync is how we want to run the code
+          onComplete(userService.save(user).runAsync) {
             case Success(Valid(savedUser)) =>
               complete(StatusCodes.Created -> savedUser)
             case Success(Invalid(errors)) =>
@@ -36,7 +37,8 @@ class UserController(userService: UserService)
       } ~
         path(Remaining) { userId =>
           get {
-            onComplete(userService.get(UserId(UUID.fromString(userId)))) {
+            // TODO: check if runAsync is how we want to run the code
+            onComplete(userService.get(UserId(UUID.fromString(userId))).runAsync) {
               case Success(Some(user)) =>
                 complete(user)
               case Success(None) =>

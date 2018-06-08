@@ -7,18 +7,18 @@ import cats.data.Validated.{ invalidNel, valid }
 import cats.data.ValidatedNel
 import cats.data.Validated._
 import cats.implicits._
+import monix.eval.Task
 import net.michalsitko.crud.entity.{ SavedUser, User, UserId }
 import net.michalsitko.crud.service.UserService
 import net.michalsitko.crud.service.UserService._
 
 import scala.collection.mutable
-import scala.concurrent.Future
 
 class InMemoryUserService extends UserService {
   private val users = mutable.Map.empty[UserId, SavedUser]
 
-  override def save(user: User): Future[ValidatedNel[UserSaveError, SavedUser]] = {
-    Future.successful(validate(user).map { validUser =>
+  override def save(user: User): Task[ValidatedNel[UserSaveError, SavedUser]] = {
+    Task.now(validate(user).map { validUser =>
       val userId = UserId(UUID.randomUUID())
       val savedUser = SavedUser.fromUser(userId, validUser)
       users += (userId -> savedUser)
@@ -26,8 +26,8 @@ class InMemoryUserService extends UserService {
     })
   }
 
-  override def get(userId: UserId): Future[Option[SavedUser]] = {
-    Future.successful(users.get(userId))
+  override def get(userId: UserId): Task[Option[SavedUser]] = {
+    Task.now(users.get(userId))
   }
 
   private def validate(user: User): ValidatedNel[UserSaveError, User] =

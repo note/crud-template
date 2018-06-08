@@ -4,7 +4,8 @@ import java.util.UUID
 
 import cats.syntax.either._
 import io.circe.{ Decoder, Encoder }
-import net.michalsitko.crud.entity.UserId
+import net.michalsitko.crud.entity.{ SavedUser, User, UserId }
+import io.circe.generic.semiauto._
 
 object Formats {
   // it does exactly the same thing as the version below
@@ -18,5 +19,9 @@ object Formats {
   implicit val decodeUserId: Decoder[UserId] = Decoder.decodeString.emap { str =>
     Either.catchNonFatal(UserId(UUID.fromString(str))).leftMap(t => "UserId")
   }
+
+  implicit val userDecoder: Decoder[User] = deriveDecoder[User]
+
+  implicit val saveUserEncoder: Encoder[SavedUser] = deriveEncoder[SavedUser]
 
 }
