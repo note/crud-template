@@ -1,6 +1,7 @@
+import com.typesafe.config.ConfigFactory
 import com.typesafe.sbt.GitPlugin.autoImport._
-import sbt._
 import sbt.Keys._
+import sbt._
 
 object Settings {
   val commonScalacOptions = Seq(
@@ -34,4 +35,16 @@ object Settings {
     )
   }
 
+  def flywayConfigFromFile(file: File) = {
+
+    lazy val config = ConfigFactory.parseFile(file).resolve().getConfig("db")
+
+    lazy val dbUrl       = s"jdbc:${config.getString("url")}"
+    lazy val dbUser      = config.getString("user")
+    lazy val dbPassword  = config.getString("password")
+
+    DbConfig(dbUrl, dbUser, dbPassword)
+  }
+
+  final case class DbConfig(url: String, user: String, password: String)
 }

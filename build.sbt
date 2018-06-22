@@ -23,12 +23,20 @@ lazy val web = (project in file("web"))
   )
   .dependsOn(core)
 
+// TODO: unhardcode
+lazy val flywayCfg = flywayConfigFromFile(new File("web/src/main/resources/application.conf"))
+
 lazy val core = (project in file("core"))
   .enablePlugins(GitBranchPrompt)
   .commonSettings
   .settings(
-    libraryDependencies ++= logging ++ Seq(monix)
+    libraryDependencies ++= logging ++ Seq(monix) ++ doobie,
+    flywayUrl := flywayCfg.url,
+    flywayUser := flywayCfg.user,
+    flywayPassword := flywayCfg.password,
+    flywayLocations += "db/migration"
   )
+  .enablePlugins(FlywayPlugin)
 
 lazy val gatling = (project in file("gatling"))
   .enablePlugins(GatlingPlugin)

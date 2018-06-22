@@ -1,0 +1,37 @@
+version: '3.6'
+
+services:
+  sbt:
+    image: hseeberger/scala-sbt:8u171_2.12.6_1.1.5
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DB_URL=postgresql://postgres:5432/crud
+      - DB_USER=crud
+      - DB_PASSWORD=password
+      - APP_PORT=8080
+    links:
+      - postgres
+      - redis
+    volumes:
+      - ./:/app/
+      - $HOME/.ivy2:/root/.ivy2
+      - $HOME/.sbt/boot:/root/.sbt/boot
+    entrypoint: sbt
+    working_dir: /app
+
+
+  postgres:
+    image: postgres:10.4
+    environment:
+      - POSTGRES_USER=crud
+      - POSTGRES_PASSWORD=password
+    # expose port for easier testing and debugging
+    ports:
+      - 5432:5432
+
+  redis:
+    image: redis:3.2.11
+    # expose port for easier testing and debugging
+    ports:
+      - 6379:6379

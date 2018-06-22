@@ -12,6 +12,7 @@ object Dependencies {
     val pureconfig      = "0.9.1"
     val logbackClassic  = "1.2.3"
     val scalaLogging    = "3.9.0"
+    val doobie          = "0.5.3"
   }
 
   val akkaHttp = Seq(
@@ -26,12 +27,16 @@ object Dependencies {
     "de.heikoseeberger"     %% "akka-http-circe"                  % Versions.akkaHttpCirce
   )
 
-
   val pureconfig      = "com.github.pureconfig" %% "pureconfig"        % Versions.pureconfig
   val monix           = "io.monix"              %% "monix"             % Versions.monix
   val logging = Seq (
     "ch.qos.logback"             %  "logback-classic"   % Versions.logbackClassic,
     "com.typesafe.scala-logging" %% "scala-logging"     % Versions.scalaLogging
+  )
+
+  val doobie = Seq(
+    "org.tpolecat" %% "doobie-core"     % Versions.doobie,
+    "org.tpolecat" %% "doobie-postgres" % Versions.doobie
   )
 
   val akkaHttpTestkit = "com.typesafe.akka"     %% "akka-http-testkit" % Versions.akkaHttp  % "test"
