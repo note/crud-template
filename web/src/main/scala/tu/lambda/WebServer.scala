@@ -5,17 +5,17 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.StrictLogging
-import monix.execution.Scheduler
 import pureconfig._
 import tu.lambda.config.AppConfig
-import tu.lambda.crud.dao.UserDao
+import tu.lambda.crud.dao.{UUIDGenerator, UserDao}
 import tu.lambda.crud.db.DbTransactor
-import tu.lambda.crud.service.impl.InMemoryUserService
+import tu.lambda.crud.service.impl.DbUserService
+import tu.lambda.http.RoutesRequestWrapper
 import tu.lambda.routes.{UserRoute, VersionRoute}
 
 import scala.util.{Failure, Success}
 
-object WebServer extends AnyRef with Services with StrictLogging {
+object WebServer extends AnyRef with Services with StrictLogging with RoutesRequestWrapper {
   def main(args: Array[String]) {
     implicit val system = ActorSystem("crud-template-http-system")
     implicit val materializer = ActorMaterializer()
@@ -26,12 +26,10 @@ object WebServer extends AnyRef with Services with StrictLogging {
     logger.info("Initializing application ...")
 
     val route = {
-      implicit val scheduler = Scheduler(system.dispatcher)
-
       val versionRoute = new VersionRoute
       val userRoute = new UserRoute(userService)
 
-      versionRoute.route ~ userRoute.route
+      requestWrapper(versionRoute.route ~ userRoute.route)
     }
 
     val bindRes = Http().bindAndHandle(route, config.binding.host, config.binding.port)
@@ -46,9 +44,12 @@ object WebServer extends AnyRef with Services with StrictLogging {
 trait Services {
   val config = loadConfig[AppConfig].right.get
 
-  val userService = new InMemoryUserService
+  implicit val uuidGen = UUIDGenerator.default
+  implicit val transactor = DbTransactor.transactor(config.db)
+
+  val userService = new DbUserService
 
   val userDao = UserDao
 
-  val transactor = DbTransactor.transactor(config.db)
+
 }

@@ -1,22 +1,36 @@
 package tu.lambda.crud.dao
 
-import tu.lambda.crud.entity.{ SavedUser, User }
+import java.util.UUID
 
+import tu.lambda.crud.entity.{SavedUser, User}
 import doobie.implicits._
+import doobie.postgres.implicits._
 
-import tu.lambda.crud.db.meta._
+// TODO: move it somewhere else
+trait UUIDGenerator {
+  def generate(): UUID
+}
+
+object UUIDGenerator {
+  val default: UUIDGenerator = () => UUID.randomUUID()
+}
 
 object UserDao {
-  def saveUser(user: User) =
-    sql"""|INSERT INTO users (email, phone, password)
-          |  VALUES (${user.email},
+  def saveUser(user: User)(implicit uuidGen: UUIDGenerator): doobie.ConnectionIO[UUID] = {
+    val uuid = uuidGen.generate()
+
+    sql"""|INSERT INTO users (id, email, phone, password)
+          |  VALUES ($uuid,
+          |          ${user.email},
           |          ${user.phone},
           |          crypt(${user.password}, gen_salt('bf', 8)))
-      """.stripMargin.update
+      """.stripMargin.update.run.map(_ => uuid)
+  }
 
-  def getUserByCredentials(email: String, password: String) =
+
+  def getUserByCredentials(email: String, password: String): doobie.ConnectionIO[Option[SavedUser]] =
     sql"""|SELECT id, email, phone FROM users
           |  WHERE email = $email AND password = crypt($password, password)
-       """.stripMargin.query[SavedUser]
+       """.stripMargin.query[SavedUser].option
 
 }

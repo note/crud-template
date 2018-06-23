@@ -22,7 +22,7 @@ import akka.http.scaladsl.server._
 import Directives._
 import monix.execution.Scheduler
 
-class UserControllerSpec extends WordSpec with Matchers with BeforeAndAfterAll with FailFastCirceSupport with ScalatestRouteTest {
+class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with FailFastCirceSupport with ScalatestRouteTest {
   implicit val scheduler: Scheduler = monix.execution.Scheduler.Implicits.global
 
   "UserController POST" should {
@@ -42,7 +42,7 @@ class UserControllerSpec extends WordSpec with Matchers with BeforeAndAfterAll w
         status should equal(StatusCodes.Created)
 
         // this way formatting and ordering of fields does not matter and we do not rely on formatters
-        // in test assertions
+        // UUIDGeneratorin test assertions
         val expectedJson =
           parse(s"""
           |{
@@ -57,7 +57,7 @@ class UserControllerSpec extends WordSpec with Matchers with BeforeAndAfterAll w
     }
 
     "return error messages for incorrect JSON" in new Context {
-      override def saveResult(user: User): Task[ValidatedNel[UserSaveError, SavedUser]] =
+      override def saveResult(user: User): Task[ValidatedNel[UserSaveFailure, SavedUser]] =
         Task.now(invalidNel(IncorrectEmail))
 
       val json =
@@ -75,7 +75,7 @@ class UserControllerSpec extends WordSpec with Matchers with BeforeAndAfterAll w
     }
 
     "return error messages for inccorect input" in new Context {
-      override def saveResult(user: User): Task[ValidatedNel[UserSaveError, SavedUser]] =
+      override def saveResult(user: User): Task[ValidatedNel[UserSaveFailure, SavedUser]] =
         Task.now(invalidNel(IncorrectEmail))
 
       val json =
@@ -139,11 +139,11 @@ class UserControllerSpec extends WordSpec with Matchers with BeforeAndAfterAll w
     val userId = UserId(UUID.randomUUID)
     val failingUserId = UserId(UUID.randomUUID)
 
-    def saveResult(user: User): Task[ValidatedNel[UserSaveError, SavedUser]] =
+    def saveResult(user: User): Task[ValidatedNel[UserSaveFailure, SavedUser]] =
       Task.now(valid(SavedUser.fromUser(userId, user)))
 
     val userService = new UserService {
-      override def save(user: User): Task[ValidatedNel[UserSaveError, SavedUser]] =
+      override def save(user: User): Task[ValidatedNel[UserSaveFailure, SavedUser]] =
         saveResult(user)
 
       override def get(id: UserId): Task[Option[SavedUser]] = id match {

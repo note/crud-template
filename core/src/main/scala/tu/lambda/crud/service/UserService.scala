@@ -1,29 +1,39 @@
 package tu.lambda.crud.service
 
-import cats.data.ValidatedNel
-import monix.eval.Task
-import tu.lambda.crud.entity.{ SavedUser, User, UserId }
+import java.sql.Connection
+
+import cats.data.{Kleisli, NonEmptyList}
+import cats.effect.IO
+import tu.lambda.crud.entity.{SavedUser, User}
 
 trait UserService {
   import UserService._
 
-  def save(user: User): Task[ValidatedNel[UserSaveError, SavedUser]]
-  def get(userId: UserId): Task[Option[SavedUser]]
+  def save(user: User): Kleisli[IO, Connection, Either[NonEmptyList[UserSaveFailure], SavedUser]]
+//  def getByCredentials(email: String, password: String): Task[Option[SavedUser]]
 }
 
 object UserService {
-  sealed trait UserSaveError {
+  sealed trait UserSaveFailure {
     def message: String
   }
-  case object IncorrectEmail extends UserSaveError {
-    override def message: String = "Incorrect email"
+
+  object UserSaveFailure {
+    case object IncorrectEmail extends UserSaveFailure {
+      override def message: String = "Incorrect email"
+    }
+
+    case object EmailAlreadyExists extends UserSaveFailure {
+      override def message: String = "Email already exists"
+    }
+
+    case object PasswordTooShort extends UserSaveFailure {
+      override def message: String = "Password too short"
+    }
+
+    case object PasswordContainsWhiteSpace extends UserSaveFailure {
+      override def message: String = "Password contains white space"
+    }
   }
 
-  case object PasswordTooShort extends UserSaveError {
-    override def message: String = "Password too short"
-  }
-
-  case object PasswordContainsWhiteSpace extends UserSaveError {
-    override def message: String = "Password too short"
-  }
 }
