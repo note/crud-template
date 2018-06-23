@@ -8,7 +8,7 @@ import net.michalsitko.crud.entity.{ SavedUser, User, UserId }
 import io.circe.generic.semiauto._
 
 object Formats {
-  // Leave it unimplemented as an Excercise:
+  // Leave it unimplemented as an TalkExample:
   implicit val userDecoder: Decoder[User] = deriveDecoder[User]
 
   implicit val saveUserEncoder: Encoder[SavedUser] = deriveEncoder[SavedUser]

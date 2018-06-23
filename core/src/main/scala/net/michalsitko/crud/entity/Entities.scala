@@ -3,6 +3,7 @@ package net.michalsitko.crud.entity
 import java.net.URL
 import java.util.UUID
 
+// TODO: try to user more specific types, think about refined, password as Array of bytes?
 final case class User(email: String, phone: String, password: String)
 
 final case class UserId(id: UUID) extends AnyVal

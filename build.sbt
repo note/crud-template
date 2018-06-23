@@ -49,4 +49,8 @@ lazy val gatling = (project in file("gatling"))
 
 
 addCommandAlias("flywayMigrate", "core/flywayMigrate")
+
+// alias for sbt-revolver commands. Since core is not runnable, web should be assumed for all of them
 addCommandAlias("reStart", "web/reStart")
+addCommandAlias("reStop", "web/reStop")
+addCommandAlias("reStatus", "web/reStatus")

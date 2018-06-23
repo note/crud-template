@@ -1,7 +1,11 @@
+import java.nio.file.{Files, Paths}
+
 import com.typesafe.config.ConfigFactory
 import com.typesafe.sbt.GitPlugin.autoImport._
 import sbt.Keys._
 import sbt._
+
+import java.nio.charset.StandardCharsets._
 
 object Settings {
   val commonScalacOptions = Seq(
@@ -27,6 +31,14 @@ object Settings {
     def commonSettings: Project = project.settings(
       scalacOptions ++= commonScalacOptions,
       scalaVersion := commonScalaVersion,
+
+      // ammonite
+      libraryDependencies += "com.lihaoyi" % "ammonite" % "1.1.2" % "test" cross CrossVersion.full,
+      project / Test / sourceGenerators += Def.task {
+        val file = (sourceManaged in Test).value / "amm.scala"
+        IO.write(file, new String(Files.readAllBytes(Paths.get("amm.scala")), UTF_8))
+        Seq(file)
+      }.taskValue,
 
       // git
       git.useGitDescribe := true,
