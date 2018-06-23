@@ -10,18 +10,16 @@ import cats.implicits._
 import doobie._
 import tu.lambda.crud.dao.{UUIDGenerator, UserDao}
 import tu.lambda.crud.entity.{SavedUser, User, UserId}
-import tu.lambda.crud.service.UserService
 import tu.lambda.crud.service.UserService.UserSaveFailure
 import tu.lambda.crud.service.UserService.UserSaveFailure._
 
-class DbUserService()(implicit uuidGen: UUIDGenerator) extends UserService {
+object DbUserService {
   val interpreter = KleisliInterpreter[IO].ConnectionInterpreter
 
-  override def save(user: User): Kleisli[IO, Connection, Either[NonEmptyList[UserSaveFailure], SavedUser]] = {
+  def save(dao: UserDao, uuidGen: UUIDGenerator)(user: User): Kleisli[IO, Connection, Either[NonEmptyList[UserSaveFailure], SavedUser]] = {
     validate(user).toEither match {
       case Right(validUser) =>
-        UserDao
-          .saveUser(validUser)
+        dao.saveUser(validUser)(uuidGen)
           .foldMap[Kleisli[IO, Connection, ?]](interpreter)
           .map(id => SavedUser.fromUser(UserId(id), user).asRight[NonEmptyList[UserSaveFailure]])
       case Left(errors) =>
@@ -29,8 +27,8 @@ class DbUserService()(implicit uuidGen: UUIDGenerator) extends UserService {
     }
   }
 
-  override def getByCredentials(email: String, password: String): Kleisli[IO, Connection, Option[SavedUser]] = {
-    UserDao
+  def getByCredentials(dao: UserDao)(email: String, password: String): Kleisli[IO, Connection, Option[SavedUser]] = {
+    dao
       .getUserByCredentials(email, password)
       .foldMap[Kleisli[IO, Connection, ?]](interpreter)
   }

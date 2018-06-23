@@ -15,7 +15,12 @@ object UUIDGenerator {
   val default: UUIDGenerator = () => UUID.randomUUID()
 }
 
-object UserDao {
+trait UserDao {
+  def saveUser(user: User)(implicit uuidGen: UUIDGenerator): doobie.ConnectionIO[UUID]
+  def getUserByCredentials(email: String, password: String): doobie.ConnectionIO[Option[SavedUser]]
+}
+
+object UserDao extends UserDao {
   def saveUser(user: User)(implicit uuidGen: UUIDGenerator): doobie.ConnectionIO[UUID] = {
     val uuid = uuidGen.generate()
 

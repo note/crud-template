@@ -1,14 +1,21 @@
 package tu.lambda
 
+import java.sql.Connection
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
+import cats.data.{Kleisli, NonEmptyList}
+import cats.effect.IO
 import com.typesafe.scalalogging.StrictLogging
 import pureconfig._
+import tu.lambda.WebServer.{userDao, uuidGen}
 import tu.lambda.config.AppConfig
 import tu.lambda.crud.dao.{UUIDGenerator, UserDao}
 import tu.lambda.crud.db.DbTransactor
+import tu.lambda.crud.entity.{SavedUser, User}
+import tu.lambda.crud.service.UserService
 import tu.lambda.crud.service.impl.DbUserService
 import tu.lambda.http.RoutesRequestWrapper
 import tu.lambda.routes.{UserRoute, VersionRoute}
@@ -37,7 +44,7 @@ object WebServer extends AnyRef with Services with StrictLogging with RoutesRequ
     bindRes.onComplete {
       case Success(binding) => logger.info(s"Application listens on: ${binding.localAddress}")
       case Failure(ex) => logger.error(s"Application failed to bind to ${config.binding}", ex)
-    }
+    }close a
   }
 }
 
@@ -47,7 +54,11 @@ trait Services {
   implicit val uuidGen = UUIDGenerator.default
   implicit val transactor = DbTransactor.transactor(config.db)
 
-  val userService = new DbUserService
+  val userService = new UserService {
+    override def save(user: User) = DbUserService.save(userDao, uuidGen)(user)
+
+    override def getByCredentials(email: String, password: String) = DbUserService.getByCredentials(userDao)(email, password)
+  }
 
   val userDao = UserDao
 
