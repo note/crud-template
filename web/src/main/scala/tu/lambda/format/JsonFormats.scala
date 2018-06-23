@@ -8,7 +8,7 @@ import io.circe.generic.semiauto._
 import tu.lambda.crud.entity.{SavedUser, User, UserId}
 import tu.lambda.entity.Credentials
 
-object Formats {
+trait JsonFormats {
   // Leave it unimplemented as an TalkExample:
   implicit val userDecoder: Decoder[User] = deriveDecoder[User]
 
