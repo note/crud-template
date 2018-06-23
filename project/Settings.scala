@@ -18,7 +18,7 @@ object Settings {
     "-language:higherKinds",
     "-language:implicitConversions",
     "-Yno-adapted-args",
-    "-Ywarn-dead-code",
+//    "-Ywarn-dead-code", // useful in normal project but inconvenient for a talk
     "-Ywarn-infer-any",
     "-Ywarn-unused-import",
     "-Xfatal-warnings",

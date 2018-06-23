@@ -3,6 +3,7 @@ package tu.lambda.routes
 import akka.http.scaladsl.server.Directives._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Encoder
+import tu.lambda.BuildInfo
 
 class VersionRoute extends AnyRef with FailFastCirceSupport {
 

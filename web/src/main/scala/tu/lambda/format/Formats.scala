@@ -3,8 +3,9 @@ package tu.lambda.format
 import java.util.UUID
 
 import cats.syntax.either._
-import io.circe.{ Decoder, Encoder }
+import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
+import tu.lambda.crud.entity.{SavedUser, User, UserId}
 
 object Formats {
   // Leave it unimplemented as an TalkExample:

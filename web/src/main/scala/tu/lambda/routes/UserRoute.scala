@@ -4,6 +4,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import cats.data.Validated.{Invalid, Valid}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
@@ -18,7 +19,7 @@ class UserRoute(userService: UserService)(implicit scheduler: Scheduler)
   extends AnyRef with FailFastCirceSupport {
   import tu.lambda.format.Formats._
 
-  val route =
+  val route: Route =
     pathPrefix("user") {
       post {
         entity(as[User]) { user =>

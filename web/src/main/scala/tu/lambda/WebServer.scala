@@ -2,11 +2,16 @@ package tu.lambda
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.StrictLogging
 import monix.execution.Scheduler
 import pureconfig._
+import tu.lambda.config.AppConfig
 import tu.lambda.crud.dao.UserDao
+import tu.lambda.crud.db.DbTransactor
+import tu.lambda.crud.service.impl.InMemoryUserService
+import tu.lambda.routes.{UserRoute, VersionRoute}
 
 import scala.util.{Failure, Success}
 
@@ -19,8 +24,6 @@ object WebServer extends AnyRef with Services with StrictLogging {
     implicit val ec = system.dispatcher
 
     logger.info("Initializing application ...")
-
-    val config = loadConfig[AppConfig].right.get
 
     val route = {
       implicit val scheduler = Scheduler(system.dispatcher)
@@ -37,17 +40,15 @@ object WebServer extends AnyRef with Services with StrictLogging {
       case Success(binding) => logger.info(s"Application listens on: ${binding.localAddress}")
       case Failure(ex) => logger.error(s"Application failed to bind to ${config.binding}", ex)
     }
-
-    val program2 = UserDao.program1
-    val transactor = DbTransactor.transactor(config.db)
-    val io = program2.transact(transactor)
-
-    val r = io.unsafeRunSync()
-
-    println("res from db: " + r)
   }
 }
 
 trait Services {
+  val config = loadConfig[AppConfig].right.get
+
   val userService = new InMemoryUserService
+
+  val userDao = UserDao
+
+  val transactor = DbTransactor.transactor(config.db)
 }
