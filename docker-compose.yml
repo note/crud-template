@@ -6,7 +6,7 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - DB_URL=postgresql://postgres:5432/crud
+      - DB_URL=jdbc:postgresql://postgres:5432/crud
       - DB_USER=crud
       - DB_PASSWORD=password
       - APP_PORT=8080

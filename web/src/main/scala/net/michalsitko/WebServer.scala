@@ -8,13 +8,13 @@ import com.typesafe.scalalogging.StrictLogging
 import monix.execution.Scheduler
 import net.michalsitko.config.AppConfig
 import net.michalsitko.crud.service.impl.InMemoryUserService
-import net.michalsitko.routes.{UserRoute, VersionRoute}
+import net.michalsitko.routes.{ UserRoute, VersionRoute }
 import pureconfig._
-import doobie._
 import doobie.implicits._
+import net.michalsitko.crud.dao.UserDao
 import net.michalsitko.crud.db.DbTransactor
 
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 object WebServer extends AnyRef with Services with StrictLogging {
   def main(args: Array[String]) {
@@ -44,8 +44,9 @@ object WebServer extends AnyRef with Services with StrictLogging {
       case Failure(ex) => logger.error(s"Application failed to bind to ${config.binding}", ex)
     }
 
-    val program2 = sql"select value from flyway_test where key = 'something'".query[Int].unique
-    val io = program2.transact(DbTransactor.transactor)
+    val program2 = UserDao.program1
+    val transactor = DbTransactor.transactor(config.db)
+    val io = program2.transact(transactor)
 
     val r = io.unsafeRunSync()
 

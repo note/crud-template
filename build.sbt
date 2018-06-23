@@ -46,3 +46,7 @@ lazy val gatling = (project in file("gatling"))
     scalaVersion := "2.11.11",
     libraryDependencies ++= Dependencies.gatling ++ Seq(pureconfig)
   )
+
+
+addCommandAlias("flywayMigrate", "core/flywayMigrate")
+addCommandAlias("reStart", "web/reStart")

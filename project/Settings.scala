@@ -39,7 +39,7 @@ object Settings {
 
     lazy val config = ConfigFactory.parseFile(file).resolve().getConfig("db")
 
-    lazy val dbUrl       = s"jdbc:${config.getString("url")}"
+    lazy val dbUrl       = config.getString("url")
     lazy val dbUser      = config.getString("user")
     lazy val dbPassword  = config.getString("password")
 
