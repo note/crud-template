@@ -1,10 +1,8 @@
 package tu.lambda.crud.service.impl
 
-import java.sql.Connection
 import java.util.UUID
 
-import cats.data.{Kleisli, NonEmptyList}
-import cats.effect.IO
+import cats.data.NonEmptyList
 import cats.free.Free
 import cats.implicits._
 import doobie.free.connection.ConnectionOp
@@ -13,8 +11,8 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{DiagrammedAssertions, WordSpec}
 import tu.lambda.crud.dao.{UUIDGenerator, UserDao}
 import tu.lambda.crud.entity.{SavedUser, User, UserId}
-import tu.lambda.crud.service.UserService
 import tu.lambda.crud.service.UserService.UserSaveFailure
+import tu.lambda.crud.service.UserService.UserSaveFailure.IncorrectEmail
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -40,22 +38,23 @@ class DbUserServiceSpec extends WordSpec with PowerMatchers with ScalaFutures {
 
   val correctUser = User("abc@example.com", "123456123", "abcdef")
 
+  val save = service.save(dao, UUIDGenerator.default)_
+
   "DbUserService" should {
 
     "return SavedUser for correct input" in {
-      val op: Kleisli[IO, Connection, Either[NonEmptyList[UserService.UserSaveFailure], SavedUser]] = service.save(dao, UUIDGenerator.default)(correctUser)
+      val res = Await.result(save(correctUser).apply(null).unsafeToFuture(), timeout)
 
       // TODO: futureValue fails to compile...
-      assert(Await.result(op.apply(null).unsafeToFuture(), timeout) == SavedUser.fromUser(UserId(newUserId), correctUser).asRight[NonEmptyList[UserSaveFailure]])
-
+      assert(res == SavedUser.fromUser(UserId(newUserId), correctUser).asRight[NonEmptyList[UserSaveFailure]])
     }
 
-//    "validate email" in {
-//      val user = correctUser.copy(email = "aa")
-//
-//      val res = Await.result(service.save(user), timeout)
-//
-//      res should equal(Validated.Invalid(NonEmptyList.of(IncorrectEmail)))
-//    }
+    "validate email" in {
+      val user = correctUser.copy(email = "aa")
+
+      val res = Await.result(save(user).apply(null).unsafeToFuture(), timeout)
+
+      assert(res == NonEmptyList.of(IncorrectEmail).asLeft[SavedUser])
+    }
   }
 }
