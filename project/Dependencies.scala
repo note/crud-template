@@ -7,7 +7,6 @@ object Dependencies {
     val akkaHttpCirce   = "1.20.1"
     val circe           = "0.9.3"
     val scalatest       = "3.0.5"
-    val gatling         = "2.2.5"
     val monix           = "3.0.0-RC1"
     val pureconfig      = "0.9.1"
     val logbackClassic  = "1.2.3"
@@ -41,10 +40,5 @@ object Dependencies {
 
   val akkaHttpTestkit = "com.typesafe.akka"     %% "akka-http-testkit" % Versions.akkaHttp  % "test"
   val scalatest       = "org.scalatest"         %% "scalatest"         % Versions.scalatest % "test"
-
-  val gatling = Seq(
-    "io.gatling.highcharts" % "gatling-charts-highcharts" % Versions.gatling,
-    "io.gatling"            % "gatling-test-framework"    % Versions.gatling
-  )
 
 }

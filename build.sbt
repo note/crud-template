@@ -17,7 +17,7 @@ lazy val web = (project in file("web"))
   .settings(
     // see more about BuildInfoPlugin and SbtGit at http://blog.byjean.eu/2015/07/10/painless-release-with-sbt.html
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, git.baseVersion, git.gitHeadCommit),
-    buildInfoPackage := "net.michalsitko",
+    buildInfoPackage := "tu.lambda",
     buildInfoUsePackageAsPath := true,
     libraryDependencies ++= akkaHttp ++ circe ++ Seq(pureconfig, akkaHttpTestkit, scalatest)
   )
@@ -37,15 +37,6 @@ lazy val core = (project in file("core"))
     flywayLocations += "db/migration"
   )
   .enablePlugins(FlywayPlugin)
-
-lazy val gatling = (project in file("gatling"))
-  .enablePlugins(GatlingPlugin)
-  .commonSettings
-  .settings(
-    // there's no gatling published built with scala 2.12
-    scalaVersion := "2.11.11",
-    libraryDependencies ++= Dependencies.gatling ++ Seq(pureconfig)
-  )
 
 
 addCommandAlias("flywayMigrate", "core/flywayMigrate")
