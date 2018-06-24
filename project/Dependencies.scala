@@ -7,7 +7,7 @@ object Dependencies {
     val akkaHttpCirce   = "1.20.1"
     val circe           = "0.9.3"
     val scalatest       = "3.0.5"
-    val monix           = "3.0.0-RC1"
+    val monix           = "3.0.0-RC1" // TODO: Do I even need monix?
     val pureconfig      = "0.9.1"
     val logbackClassic  = "1.2.3"
     val scalaLogging    = "3.9.0"

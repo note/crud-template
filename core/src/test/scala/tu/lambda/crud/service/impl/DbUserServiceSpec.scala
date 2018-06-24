@@ -12,17 +12,13 @@ import org.scalatest.{DiagrammedAssertions, WordSpec}
 import tu.lambda.crud.dao.{UUIDGenerator, UserDao}
 import tu.lambda.crud.entity.{SavedUser, User, UserId}
 import tu.lambda.crud.service.UserService.UserSaveFailure
-import tu.lambda.crud.service.UserService.UserSaveFailure.IncorrectEmail
+import tu.lambda.crud.service.UserService.UserSaveFailure._
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
 
 trait PowerMatchers extends DiagrammedAssertions with Tolerance with Explicitly
 
 class DbUserServiceSpec extends WordSpec with PowerMatchers with ScalaFutures {
-//  override implicit def patienceConfig: PatienceConfig =
-//    super.patienceConfig
-//      .copy(timeout = scaled(Span(500, Millis)), interval = scaled(Span(50, Millis)))
 
   val timeout = 200.millis
   val service = DbUserService
@@ -38,23 +34,38 @@ class DbUserServiceSpec extends WordSpec with PowerMatchers with ScalaFutures {
 
   val correctUser = User("abc@example.com", "123456123", "abcdef")
 
-  val save = service.save(dao, UUIDGenerator.default)_
-
-  "DbUserService" should {
+  "DbUserService.save" should {
+    val save = (service.save(dao, UUIDGenerator.default)_)
+      .andThen(_.apply(null).unsafeToFuture().futureValue)
 
     "return SavedUser for correct input" in {
-      val res = Await.result(save(correctUser).apply(null).unsafeToFuture(), timeout)
+      val res = save(correctUser)
 
-      // TODO: futureValue fails to compile...
       assert(res == SavedUser.fromUser(UserId(newUserId), correctUser).asRight[NonEmptyList[UserSaveFailure]])
     }
 
     "validate email" in {
-      val user = correctUser.copy(email = "aa")
-
-      val res = Await.result(save(user).apply(null).unsafeToFuture(), timeout)
+      val res = save(correctUser.copy(email = "aa"))
 
       assert(res == NonEmptyList.of(IncorrectEmail).asLeft[SavedUser])
+    }
+
+    "validate password length" in {
+      val res = save(correctUser.copy(password = ""))
+
+      assert(res == NonEmptyList.of(PasswordTooShort).asLeft[SavedUser])
+    }
+
+    "validate password format" in {
+      val res = save(correctUser.copy(password = "abcdef a"))
+
+      assert(res == NonEmptyList.of(PasswordContainsWhiteSpace).asLeft[SavedUser])
+    }
+
+    "return combined errors" in {
+      val res = save(correctUser.copy(email = "a", password = "a a"))
+
+      assert(res == NonEmptyList.of(IncorrectEmail, PasswordContainsWhiteSpace, PasswordTooShort).asLeft[SavedUser])
     }
   }
 }

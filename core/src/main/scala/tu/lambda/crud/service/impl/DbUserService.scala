@@ -14,6 +14,7 @@ import tu.lambda.crud.service.UserService.UserSaveFailure
 import tu.lambda.crud.service.UserService.UserSaveFailure._
 
 object DbUserService {
+  // TODO: extract it somewhere else?
   val interpreter = KleisliInterpreter[IO].ConnectionInterpreter
 
   def save(dao: UserDao, uuidGen: UUIDGenerator)(user: User): Kleisli[IO, Connection, Either[NonEmptyList[UserSaveFailure], SavedUser]] = {
@@ -40,8 +41,8 @@ object DbUserService {
 
   private def validateEmail(email: String): ValidatedNel[UserSaveFailure, Unit] =
     (emailPattern findFirstIn email) match {
-      case Some(_) => valid(())
-      case None => invalidNel(IncorrectEmail)
+      case Some(_)  => valid(())
+      case None     => invalidNel(IncorrectEmail)
     }
 
   private def validatePassword(password: String): ValidatedNel[UserSaveFailure, Unit] =
