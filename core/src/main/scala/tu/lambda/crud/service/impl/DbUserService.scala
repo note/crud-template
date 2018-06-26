@@ -9,7 +9,7 @@ import cats.effect.IO
 import cats.implicits._
 import doobie._
 import tu.lambda.crud.dao.{UUIDGenerator, UserDao}
-import tu.lambda.crud.entity.{SavedUser, User, UserId}
+import tu.lambda.crud.entity.{SavedUser, User}
 import tu.lambda.crud.service.UserService.UserSaveFailure
 import tu.lambda.crud.service.UserService.UserSaveFailure._
 
@@ -22,7 +22,7 @@ object DbUserService {
       case Right(validUser) =>
         dao.saveUser(validUser)(uuidGen)
           .foldMap[Kleisli[IO, Connection, ?]](interpreter)
-          .map(id => SavedUser.fromUser(UserId(id), user).asRight[NonEmptyList[UserSaveFailure]])
+          .map(id => SavedUser.fromUser(id, user).asRight[NonEmptyList[UserSaveFailure]])
       case Left(errors) =>
         Kleisli.liftF(IO.pure(errors.asLeft[SavedUser]))
     }

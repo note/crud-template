@@ -2,7 +2,8 @@ package tu.lambda.crud.dao
 
 import java.util.UUID
 
-import tu.lambda.crud.entity.{SavedUser, User}
+import tu.lambda.crud.entity.{SavedUser, User, UserId}
+import doobie.ConnectionIO
 import doobie.implicits._
 import doobie.postgres.implicits._
 
@@ -16,25 +17,25 @@ object UUIDGenerator {
 }
 
 trait UserDao {
-  def saveUser(user: User)(implicit uuidGen: UUIDGenerator): doobie.ConnectionIO[UUID]
-  def getUserByCredentials(email: String, password: String): doobie.ConnectionIO[Option[SavedUser]]
+  def saveUser(user: User)(implicit uuidGen: UUIDGenerator): ConnectionIO[UserId]
+  def getUserByCredentials(email: String, password: String): ConnectionIO[Option[SavedUser]]
 }
 
 object UserDao extends UserDao {
-  def saveUser(user: User)(implicit uuidGen: UUIDGenerator): doobie.ConnectionIO[UUID] = {
+  def saveUser(user: User)(implicit uuidGen: UUIDGenerator): ConnectionIO[UserId] = {
     val uuid = uuidGen.generate()
 
-    sql"""|INSERT INTO users (id, email, phone, password)
+    sql"""INSERT INTO users (id, email, phone, password)
           |  VALUES ($uuid,
           |          ${user.email},
           |          ${user.phone},
           |          crypt(${user.password}, gen_salt('bf', 8)))
-      """.stripMargin.update.run.map(_ => uuid)
+      """.stripMargin.update.run.map(_ => UserId(uuid))
   }
 
 
-  def getUserByCredentials(email: String, password: String): doobie.ConnectionIO[Option[SavedUser]] =
-    sql"""|SELECT id, email, phone FROM users
+  def getUserByCredentials(email: String, password: String): ConnectionIO[Option[SavedUser]] =
+    sql"""SELECT id, email, phone FROM users
           |  WHERE email = $email AND password = crypt($password, password)
        """.stripMargin.query[SavedUser].option
 

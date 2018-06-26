@@ -15,7 +15,7 @@ class UserRoute(userService: UserService)(implicit transactor: Aux[IO, Unit])
   extends BaseRoute {
 
   val route: Route =
-    pathPrefix("user") {
+    pathPrefix("users") {
       post {
         entity(as[User]) { user =>
           // TODO: check if runAsync is how we want to run the code

@@ -1,24 +1,21 @@
 package tu.lambda
 
-import java.sql.Connection
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
-import cats.data.{Kleisli, NonEmptyList}
 import cats.effect.IO
 import com.typesafe.scalalogging.StrictLogging
+import doobie.util.transactor.Transactor.Aux
 import pureconfig._
-import tu.lambda.WebServer.{userDao, uuidGen}
 import tu.lambda.config.AppConfig
-import tu.lambda.crud.dao.{UUIDGenerator, UserDao}
+import tu.lambda.crud.dao.{BookmarkDao, UUIDGenerator, UserDao}
 import tu.lambda.crud.db.DbTransactor
-import tu.lambda.crud.entity.{SavedUser, User}
-import tu.lambda.crud.service.UserService
-import tu.lambda.crud.service.impl.DbUserService
+import tu.lambda.crud.entity._
+import tu.lambda.crud.service.impl.{DbBookmarkService, DbUserService}
+import tu.lambda.crud.service.{BookmarkService, UserService}
 import tu.lambda.http.RoutesRequestWrapper
-import tu.lambda.routes.{UserRoute, VersionRoute}
+import tu.lambda.routes.{BookmarkRoute, UserRoute, VersionRoute}
 
 import scala.util.{Failure, Success}
 
@@ -35,8 +32,9 @@ object WebServer extends AnyRef with Services with StrictLogging with RoutesRequ
     val route = {
       val versionRoute = new VersionRoute
       val userRoute = new UserRoute(userService)
+      val bookmarkRoute = new BookmarkRoute(bookmarkService)
 
-      requestWrapper(versionRoute.route ~ userRoute.route)
+      requestWrapper(versionRoute.route ~ userRoute.route ~ bookmarkRoute.route)
     }
 
     val bindRes = Http().bindAndHandle(route, config.binding.host, config.binding.port)
@@ -44,7 +42,7 @@ object WebServer extends AnyRef with Services with StrictLogging with RoutesRequ
     bindRes.onComplete {
       case Success(binding) => logger.info(s"Application listens on: ${binding.localAddress}")
       case Failure(ex) => logger.error(s"Application failed to bind to ${config.binding}", ex)
-    }close a
+    }
   }
 }
 
@@ -52,7 +50,10 @@ trait Services {
   val config = loadConfig[AppConfig].right.get
 
   implicit val uuidGen = UUIDGenerator.default
-  implicit val transactor = DbTransactor.transactor(config.db)
+  implicit val transactor: Aux[IO, Unit] = DbTransactor.transactor(config.db)
+
+  val userDao = UserDao
+  val bookmarkDao = BookmarkDao
 
   val userService = new UserService {
     override def save(user: User) = DbUserService.save(userDao, uuidGen)(user)
@@ -60,7 +61,11 @@ trait Services {
     override def getByCredentials(email: String, password: String) = DbUserService.getByCredentials(userDao)(email, password)
   }
 
-  val userDao = UserDao
+  val bookmarkService = new BookmarkService {
+    override def save(bookmark: Bookmark, userId: UserId) = DbBookmarkService.save(bookmarkDao, uuidGen)(bookmark, userId)
+    override def getByUserId(userId: UserId) = DbBookmarkService.getByUserId(bookmarkDao)(userId)
+  }
+
 
 
 }

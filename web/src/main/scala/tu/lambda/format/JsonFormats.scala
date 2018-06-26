@@ -5,7 +5,7 @@ import java.util.UUID
 import cats.syntax.either._
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
-import tu.lambda.crud.entity.{SavedUser, User, UserId}
+import tu.lambda.crud.entity.{Bookmark, SavedUser, User, UserId}
 import tu.lambda.entity.Credentials
 
 trait JsonFormats {
@@ -22,5 +22,7 @@ trait JsonFormats {
   }
 
   implicit val credentialsDecoder = deriveDecoder[Credentials]
+
+  implicit val bookmarkDecoder = deriveDecoder[Bookmark]
 
 }

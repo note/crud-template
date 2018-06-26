@@ -20,20 +20,20 @@ object UserService {
 
   object UserSaveFailure {
     case object IncorrectEmail extends UserSaveFailure {
-      override def message: String = "Incorrect email"
+      override val message: String = "Incorrect email"
     }
 
     // TODO: add this one!
     case object EmailAlreadyExists extends UserSaveFailure {
-      override def message: String = "Email already exists"
+      override val message: String = "Email already exists"
     }
 
     case object PasswordTooShort extends UserSaveFailure {
-      override def message: String = "Password too short"
+      override val message: String = "Password too short"
     }
 
     case object PasswordContainsWhiteSpace extends UserSaveFailure {
-      override def message: String = "Password contains white space"
+      override val message: String = "Password contains white space"
     }
   }
 
