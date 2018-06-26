@@ -14,7 +14,7 @@ object DbBookmarkService {
 
   def save(dao: BookmarkDao, uuidGen: UUIDGenerator)(bookmark: Bookmark, userId: UserId): Kleisli[IO, Connection, SavedBookmark] =
     dao.saveBookmark(bookmark, userId)(uuidGen)
-      .map(id => SavedBookmark.fromBookmark(id, bookmark))
+      .map(id => SavedBookmark.fromBookmark(id, userId, bookmark))
       .foldMap[Kleisli[IO, Connection, ?]](interpreter)
 
   def getByUserId(dao: BookmarkDao)(userId: UserId): Kleisli[IO, Connection, List[Bookmark]] =

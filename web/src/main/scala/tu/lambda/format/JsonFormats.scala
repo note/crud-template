@@ -1,12 +1,15 @@
 package tu.lambda.format
 
+import java.net.URL
 import java.util.UUID
 
 import cats.syntax.either._
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
-import tu.lambda.crud.entity.{Bookmark, SavedUser, User, UserId}
+import tu.lambda.crud.entity._
 import tu.lambda.entity.Credentials
+
+import scala.util.Try
 
 trait JsonFormats {
   // Leave it unimplemented as an TalkExample:
@@ -23,6 +26,17 @@ trait JsonFormats {
 
   implicit val credentialsDecoder = deriveDecoder[Credentials]
 
+  implicit val urlDecoder: Decoder[URL] = Decoder.decodeString
+    .emapTry(in => Try(new URL(in)))
+    .withErrorMessage("Incorrect URL format")
+
+  implicit val urlEncoder: Encoder[URL] = Encoder.encodeString.contramap[URL](_.toString)
+
+  implicit val bookmarkIdEncoder: Encoder[BookmarkId] =
+    Encoder.encodeString.contramap[BookmarkId](_.id.toString)
+
   implicit val bookmarkDecoder = deriveDecoder[Bookmark]
+
+  implicit val savedBookmarkEncoder = deriveEncoder[SavedBookmark]
 
 }
