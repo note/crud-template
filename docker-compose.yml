@@ -12,7 +12,7 @@ services:
       - APP_PORT=8080
     links:
       - postgres
-      - redis
+      - aerospike
     volumes:
       - ./:/app/
       - $HOME/.ivy2:/root/.ivy2
@@ -32,8 +32,8 @@ services:
     ports:
       - 5432:5432
 
-  redis:
-    image: redis:3.2.11
+  aerospike:
+    image: aerospike/aerospike-server:4.2.0.3
     # expose port for easier testing and debugging
     ports:
-      - 6379:6379
+      - 3000:3000

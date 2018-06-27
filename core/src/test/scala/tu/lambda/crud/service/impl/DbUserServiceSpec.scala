@@ -23,11 +23,11 @@ class DbUserServiceSpec extends WordSpec with PowerMatchers with ScalaFutures {
   val timeout = 200.millis
   val service = DbUserService
 
-  val newUserId = UUID.randomUUID()
+  val newUserId = UserId(UUID.randomUUID())
 
   val dao = new UserDao {
-    override def saveUser(user: User)(implicit uuidGen: UUIDGenerator): doobie.ConnectionIO[UUID] =
-      Free.pure[ConnectionOp, UUID](newUserId)
+    override def saveUser(user: User)(implicit uuidGen: UUIDGenerator): doobie.ConnectionIO[UserId] =
+      Free.pure[ConnectionOp, UserId](newUserId)
 
     override def getUserByCredentials(email: String, password: String): doobie.ConnectionIO[Option[SavedUser]] = ???
   }
@@ -41,7 +41,7 @@ class DbUserServiceSpec extends WordSpec with PowerMatchers with ScalaFutures {
     "return SavedUser for correct input" in {
       val res = save(correctUser)
 
-      assert(res == SavedUser.fromUser(UserId(newUserId), correctUser).asRight[NonEmptyList[UserSaveFailure]])
+      assert(res == SavedUser.fromUser(newUserId, correctUser).asRight[NonEmptyList[UserSaveFailure]])
     }
 
     "validate email" in {

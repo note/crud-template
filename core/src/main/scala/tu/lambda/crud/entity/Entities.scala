@@ -3,10 +3,18 @@ package tu.lambda.crud.entity
 import java.net.URL
 import java.util.UUID
 
+import scala.util.Try
+
 // TODO: try to user more specific types, think about refined, password as Array of bytes?
 final case class User(email: String, phone: String, password: String)
 
 final case class UserId(id: UUID) extends AnyVal
+
+object UserId {
+  def fromString(input: String): Try[UserId] = Try {
+    UserId(UUID.fromString(input))
+  }
+}
 
 final case class SavedUser(id: UserId, email: String, phone: String)
 

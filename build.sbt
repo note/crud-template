@@ -19,7 +19,7 @@ lazy val web = (project in file("web"))
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, git.baseVersion, git.gitHeadCommit),
     buildInfoPackage := "tu.lambda",
     buildInfoUsePackageAsPath := true,
-    libraryDependencies ++= akkaHttp ++ circe ++ Seq(pureconfig, akkaHttpTestkit)
+    libraryDependencies ++= akkaHttp ++ circe ++ Seq(pureconfig, akkaHttpTestkit, scalatest)
   )
   .dependsOn(core)
 
@@ -30,7 +30,7 @@ lazy val core = (project in file("core"))
   .enablePlugins(GitBranchPrompt)
   .commonSettings
   .settings(
-    libraryDependencies ++= logging ++ Seq(monix) ++ doobie ++ Seq(scalatest),
+    libraryDependencies ++= logging ++ Seq(monix, aerospike) ++ doobie ++ Seq(scalatest),
     flywayUrl := flywayCfg.url,
     flywayUser := flywayCfg.user,
     flywayPassword := flywayCfg.password,

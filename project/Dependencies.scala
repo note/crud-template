@@ -12,6 +12,7 @@ object Dependencies {
     val logbackClassic  = "1.2.3"
     val scalaLogging    = "3.9.0"
     val doobie          = "0.5.3"
+    val aerospike       = "4.0.2"
   }
 
   val akkaHttp = Seq(
@@ -37,6 +38,8 @@ object Dependencies {
     "org.tpolecat" %% "doobie-core"     % Versions.doobie,
     "org.tpolecat" %% "doobie-postgres" % Versions.doobie
   )
+
+  val aerospike = "com.aerospike" % "aerospike-client" % Versions.aerospike
 
   val akkaHttpTestkit = "com.typesafe.akka"     %% "akka-http-testkit" % Versions.akkaHttp  % "test"
   val scalatest       = "org.scalatest"         %% "scalatest"         % Versions.scalatest % "test"
