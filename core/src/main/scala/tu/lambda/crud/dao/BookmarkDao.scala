@@ -3,12 +3,12 @@ package tu.lambda.crud.dao
 import doobie.ConnectionIO
 import doobie.implicits._
 import doobie.postgres.implicits._
-import tu.lambda.crud.entity.{Bookmark, BookmarkId, UserId}
+import tu.lambda.crud.entity.{Bookmark, BookmarkId, SavedBookmark, UserId}
 import tu.lambda.crud.db.meta._
 
 trait BookmarkDao {
   def saveBookmark(bookmark: Bookmark, userId: UserId)(implicit uuidGen: UUIDGenerator): ConnectionIO[BookmarkId]
-  def getBookmarksByUserId(userId: UserId): ConnectionIO[List[Bookmark]]
+  def getBookmarksByUserId(userId: UserId): ConnectionIO[List[SavedBookmark]]
 }
 
 object BookmarkDao extends BookmarkDao {
@@ -23,8 +23,8 @@ object BookmarkDao extends BookmarkDao {
     """.stripMargin.update.run.map(_ => BookmarkId(uuid))
   }
 
-  override def getBookmarksByUserId(userId: UserId): ConnectionIO[List[Bookmark]] =
+  override def getBookmarksByUserId(userId: UserId): ConnectionIO[List[SavedBookmark]] =
     sql"""SELECT id, user_id, url, description FROM bookmarks
          |  WHERE userId = ${userId.id}
-    """.stripMargin.query[Bookmark].to[List]
+    """.stripMargin.query[SavedBookmark].to[List]
 }

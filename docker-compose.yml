@@ -4,8 +4,6 @@ services:
   sbt:
     image: hseeberger/scala-sbt:8u171_2.12.6_1.1.5
     environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
       - DB_URL=jdbc:postgresql://postgres:5432/crud
       - DB_USER=crud
       - DB_PASSWORD=password
@@ -37,3 +35,5 @@ services:
     # expose port for easier testing and debugging
     ports:
       - 3000:3000
+    environment:
+      - NAMESPACE=crud # unhardcode

@@ -3,16 +3,20 @@ package tu.lambda.crud.service.impl
 import java.sql.Connection
 import java.util.UUID
 
-import cats.implicits._
 import cats.data.{EitherT, Kleisli}
 import cats.effect.IO
+import cats.implicits._
 import doobie.KleisliInterpreter
 import doobie.free.connection.ConnectionIO
+import doobie.util.transactor.Transactor
 import tu.lambda.crud.aerospike.{AerospikeClient, UserSessionRepo}
 import tu.lambda.crud.dao.{BookmarkDao, UUIDGenerator}
-import tu.lambda.crud.entity.{Bookmark, SavedBookmark, UserId}
+import tu.lambda.crud.entity.{Bookmark, SavedBookmark}
 
-final case class AppContext(dbConnection: Connection, aerospikeClient: AerospikeClient)
+final case class AppContext(transactor: Transactor.Aux[IO, Unit], aerospikeClient: AerospikeClient) {
+  // TODO: it's bad
+  def dbConnection: Connection = transactor.connect(transactor.kernel).unsafeRunSync()
+}
 
 class DbBookmarkService(dao: BookmarkDao, sessionRepo: UserSessionRepo)(implicit uuidGen: UUIDGenerator) {
   // TODO: extract it somewhere else?
@@ -27,10 +31,10 @@ class DbBookmarkService(dao: BookmarkDao, sessionRepo: UserSessionRepo)(implicit
   }
 
 
-  def getByUserId(userId: UserId, token: UUID): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, List[Bookmark]] = {
+  def getByUserId(token: UUID): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, List[SavedBookmark]] = {
     for {
       sess <- aeroStack(sessionRepo.read(token))
-      bookmarks <- stacked(dao.getBookmarksByUserId(userId))
+      bookmarks <- stacked(dao.getBookmarksByUserId(sess.userId))
     } yield bookmarks
   }
 
@@ -38,7 +42,7 @@ class DbBookmarkService(dao: BookmarkDao, sessionRepo: UserSessionRepo)(implicit
     in.local[AppContext](_.aerospikeClient).map(_.toRight[BookmarkError](NotGranted)).mapF [EitherT[IO, BookmarkError, ?], T](EitherT.apply)
   }
 
-  def stacked[T](in: ConnectionIO[T]) =
+  def stacked[T](in: ConnectionIO[T]): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, T] =
     in.foldMap[Kleisli[IO, Connection, ?]](interpreter).local[AppContext](_.dbConnection).map(_.asRight[BookmarkError]).mapF[EitherT[IO, BookmarkError, ?], T](EitherT.apply)
 
 

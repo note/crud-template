@@ -6,6 +6,7 @@ import java.util.UUID
 import cats.syntax.either._
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
+import tu.lambda.crud.aerospike.UserSession
 import tu.lambda.crud.entity._
 import tu.lambda.entity.Credentials
 
@@ -38,5 +39,7 @@ trait JsonFormats {
   implicit val bookmarkDecoder = deriveDecoder[Bookmark]
 
   implicit val savedBookmarkEncoder = deriveEncoder[SavedBookmark]
+
+  implicit val userSessionsEncoder = deriveEncoder[UserSession]
 
 }

@@ -8,10 +8,11 @@ import io.circe.Json
 import io.circe.syntax._
 import tu.lambda.crud.entity.User
 import tu.lambda.crud.service.UserService
+import tu.lambda.crud.service.impl.AppContext
 import tu.lambda.entity.Credentials
 
 
-class UserRoute(userService: UserService)(implicit transactor: Aux[IO, Unit])
+class UserRoute(userService: UserService)(implicit transactor: Aux[IO, Unit], appContext: AppContext)
   extends BaseRoute {
 
   val route: Route =

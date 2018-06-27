@@ -1,6 +1,5 @@
 package tu.lambda
 
-import java.sql.Connection
 import java.util.UUID
 
 import akka.actor.ActorSystem
@@ -13,7 +12,7 @@ import com.typesafe.scalalogging.StrictLogging
 import doobie.util.transactor.Transactor.Aux
 import pureconfig._
 import tu.lambda.config.AppConfig
-import tu.lambda.crud.aerospike.{UserSession, UserSessionRepo}
+import tu.lambda.crud.aerospike.{AerospikeClient, UserSession, UserSessionRepo}
 import tu.lambda.crud.dao.{BookmarkDao, UUIDGenerator, UserDao}
 import tu.lambda.crud.db.DbTransactor
 import tu.lambda.crud.entity._
@@ -34,7 +33,7 @@ object WebServer extends AnyRef with Services with StrictLogging with RoutesRequ
 
     logger.info("Initializing application ...")
 
-    val route = {
+    lazy val route = {
       val versionRoute = new VersionRoute
       val userRoute = new UserRoute(userService)
       val bookmarkRoute = new BookmarkRoute(bookmarkService)
@@ -56,6 +55,8 @@ trait Services {
 
   implicit val uuidGen = UUIDGenerator.default
   implicit val transactor: Aux[IO, Unit] = DbTransactor.transactor(config.db)
+  val aerospikeClient = new AerospikeClient(config.aerospike)
+  implicit val appContext: AppContext = AppContext(transactor, aerospikeClient)
 
   val userDao = UserDao
   val bookmarkDao = BookmarkDao
@@ -71,11 +72,11 @@ trait Services {
   }
 
   val bookmarkService = new BookmarkService {
-    def saver(bookmark: Bookmark, token: UUID): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, SavedBookmark] =
+    override def save(bookmark: Bookmark, token: UUID): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, SavedBookmark] =
       new DbBookmarkService(bookmarkDao, sessionRepo)(uuidGen).save(bookmark, token)
 
-    override def getByUserId(userId: UserId) =
-      DbBookmarkService.getByUserId(bookmarkDao)(userId)
+    override def getByUserId(token: UUID) =
+      new DbBookmarkService(bookmarkDao, sessionRepo)(uuidGen).getByUserId(token)
   }
 
 
