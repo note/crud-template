@@ -4,14 +4,17 @@ import java.sql.Connection
 
 import cats.Applicative
 import cats.data.Validated.{invalidNel, valid, _}
-import cats.data.{Kleisli, NonEmptyList, ValidatedNel}
+import cats.data.{Kleisli, NonEmptyList, OptionT, ValidatedNel}
 import cats.effect.IO
 import cats.implicits._
 import doobie._
+import tu.lambda.crud.aerospike.{UserSession, UserSessionRepo}
 import tu.lambda.crud.dao.{UUIDGenerator, UserDao}
 import tu.lambda.crud.entity.{SavedUser, User}
 import tu.lambda.crud.service.UserService.UserSaveFailure
 import tu.lambda.crud.service.UserService.UserSaveFailure._
+
+import scala.concurrent.duration._
 
 object DbUserService {
   // TODO: extract it somewhere else?
@@ -32,6 +35,15 @@ object DbUserService {
     dao
       .getUserByCredentials(email, password)
       .foldMap[Kleisli[IO, Connection, ?]](interpreter)
+  }
+
+  def login(dao: UserDao, sessionRepo: UserSessionRepo, uuidGen: UUIDGenerator)(email: String, password: String): Kleisli[OptionT[IO, ?], AppContext, UserSession] = {
+    for {
+      user <- getByCredentials(dao)(email, password).local[AppContext](_.dbConnection).mapF [OptionT[IO, ?], SavedUser](OptionT.apply)
+      session = UserSession(user.id, uuidGen.generate())
+      // TODO: expiration - from config?
+      _ <- sessionRepo.insert(10.minutes)(session).local[AppContext](_.aerospikeClient).mapF [OptionT[IO, ?], Unit](t => OptionT.apply(t.map(_.some)))
+    } yield session
   }
 
   private def validate(user: User): ValidatedNel[UserSaveFailure, User] =

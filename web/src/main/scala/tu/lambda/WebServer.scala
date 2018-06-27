@@ -1,18 +1,23 @@
 package tu.lambda
 
+import java.sql.Connection
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
+import cats.data.{EitherT, Kleisli}
 import cats.effect.IO
 import com.typesafe.scalalogging.StrictLogging
 import doobie.util.transactor.Transactor.Aux
 import pureconfig._
 import tu.lambda.config.AppConfig
+import tu.lambda.crud.aerospike.{UserSession, UserSessionRepo}
 import tu.lambda.crud.dao.{BookmarkDao, UUIDGenerator, UserDao}
 import tu.lambda.crud.db.DbTransactor
 import tu.lambda.crud.entity._
-import tu.lambda.crud.service.impl.{DbBookmarkService, DbUserService}
+import tu.lambda.crud.service.impl.{AppContext, BookmarkError, DbBookmarkService, DbUserService}
 import tu.lambda.crud.service.{BookmarkService, UserService}
 import tu.lambda.http.RoutesRequestWrapper
 import tu.lambda.routes.{BookmarkRoute, UserRoute, VersionRoute}
@@ -54,16 +59,23 @@ trait Services {
 
   val userDao = UserDao
   val bookmarkDao = BookmarkDao
+  val sessionRepo = UserSessionRepo
 
   val userService = new UserService {
     override def save(user: User) = DbUserService.save(userDao, uuidGen)(user)
 
     override def getByCredentials(email: String, password: String) = DbUserService.getByCredentials(userDao)(email, password)
+
+    override def login(email: String, password: String): Kleisli[IO, AppContext, Option[UserSession]] =
+      DbUserService.login(userDao, sessionRepo, uuidGen)(email, password).mapF(_.value)
   }
 
   val bookmarkService = new BookmarkService {
-    override def save(bookmark: Bookmark, userId: UserId) = DbBookmarkService.save(bookmarkDao, uuidGen)(bookmark, userId)
-    override def getByUserId(userId: UserId) = DbBookmarkService.getByUserId(bookmarkDao)(userId)
+    def saver(bookmark: Bookmark, token: UUID): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, SavedBookmark] =
+      new DbBookmarkService(bookmarkDao, sessionRepo)(uuidGen).save(bookmark, token)
+
+    override def getByUserId(userId: UserId) =
+      DbBookmarkService.getByUserId(bookmarkDao)(userId)
   }
 
 

@@ -7,9 +7,10 @@ import cats.implicits._
 import cats.data.{EitherT, Kleisli}
 import cats.effect.IO
 import doobie.KleisliInterpreter
-import tu.lambda.crud.aerospike.{AerospikeClient, UserSession, UserSessionRepo}
+import doobie.free.connection.ConnectionIO
+import tu.lambda.crud.aerospike.{AerospikeClient, UserSessionRepo}
 import tu.lambda.crud.dao.{BookmarkDao, UUIDGenerator}
-import tu.lambda.crud.entity.{Bookmark, BookmarkId, SavedBookmark, UserId}
+import tu.lambda.crud.entity.{Bookmark, SavedBookmark, UserId}
 
 final case class AppContext(dbConnection: Connection, aerospikeClient: AerospikeClient)
 
@@ -19,27 +20,27 @@ class DbBookmarkService(dao: BookmarkDao, sessionRepo: UserSessionRepo)(implicit
 
   // TODO: change token type to somehthing more meaningful
   def save(bookmark: Bookmark, token: UUID): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, SavedBookmark] = {
-//    val tmp: Kleisli[IO, Connection, SavedBookmark] = dao.saveBookmark(bookmark, userId)(uuidGen)
-//      .map(id => SavedBookmark.fromBookmark(id, userId, bookmark))
-//      .foldMap[Kleisli[IO, Connection, ?]](interpreter)
-
-
-    val t1 = sessionRepo.read(token).local[AppContext](_.aerospikeClient).map(_.toRight[BookmarkError](NotGranted)).mapF [EitherT[IO, BookmarkError, ?], UserSession] { io =>
-      val tmp: EitherT[IO, BookmarkError, UserSession] = EitherT.apply(io)
-      tmp
-    }
-
     for {
-      sess <- t1
-      bookmarkId <- dao.saveBookmark(bookmark, sess.userId).foldMap[Kleisli[IO, Connection, ?]](interpreter).local[AppContext](_.dbConnection).map(_.asRight[BookmarkError]).mapF[EitherT[IO, BookmarkError, ?], BookmarkId](EitherT.apply)
+      sess <- aeroStack(sessionRepo.read(token))
+      bookmarkId <- stacked(dao.saveBookmark(bookmark, sess.userId))
     } yield SavedBookmark.fromBookmark(bookmarkId, sess.userId, bookmark)
-
   }
 
 
-  def getByUserId(userId: UserId): Kleisli[IO, Connection, List[Bookmark]] =
-    dao.getBookmarksByUserId(userId)
-      .foldMap[Kleisli[IO, Connection, ?]](interpreter)
+  def getByUserId(userId: UserId, token: UUID): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, List[Bookmark]] = {
+    for {
+      sess <- aeroStack(sessionRepo.read(token))
+      bookmarks <- stacked(dao.getBookmarksByUserId(userId))
+    } yield bookmarks
+  }
+
+  def aeroStack[T](in: Kleisli[IO, AerospikeClient, Option[T]]) = {
+    in.local[AppContext](_.aerospikeClient).map(_.toRight[BookmarkError](NotGranted)).mapF [EitherT[IO, BookmarkError, ?], T](EitherT.apply)
+  }
+
+  def stacked[T](in: ConnectionIO[T]) =
+    in.foldMap[Kleisli[IO, Connection, ?]](interpreter).local[AppContext](_.dbConnection).map(_.asRight[BookmarkError]).mapF[EitherT[IO, BookmarkError, ?], T](EitherT.apply)
+
 
 }
 

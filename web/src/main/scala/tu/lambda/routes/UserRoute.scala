@@ -33,7 +33,7 @@ class UserRoute(userService: UserService)(implicit transactor: Aux[IO, Unit])
           post {
             entity(as[Credentials]) { credentials =>
               // TODO: check if runAsync is how we want to run the code
-              onSuccess(userService.getByCredentials(credentials.email, credentials.password).exec) {
+              onSuccess(userService.login(credentials.email, credentials.password).exec) {
                 case Some(user) =>
                   complete(user)
                 case None =>
