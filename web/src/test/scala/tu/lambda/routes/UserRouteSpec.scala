@@ -1,6 +1,5 @@
 package tu.lambda.routes
 
-import java.sql.Connection
 import java.util.UUID
 
 import akka.http.scaladsl.model.{StatusCodes, _}
@@ -42,8 +41,6 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
       postRequest ~> userRoute.route ~> check {
         status should equal(StatusCodes.Created)
 
-        // this way formatting and ordering of fields does not matter and we do not rely on formatters
-        // UUIDGeneratorin test assertions
         val expectedJson =
           parse(s"""
           |{
@@ -153,7 +150,6 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
     val incorrectCreds  = Credentials("incorrect", "incorrect")
     val token           = UUID.randomUUID()
 
-    // TODO: it's super ugly, https://github.com/tpolecat/doobie/issues/460
     implicit val transactor: Transactor[IO] =
       Transactor.fromConnection[IO](null).copy(strategy0 = Strategy.void)
 
@@ -167,7 +163,7 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
       IO.pure(SavedUser.fromUser(userId, user).asRight[NonEmptyList[UserSaveFailure]])
 
     val userService = new UserService {
-      override def save(user: User): Kleisli[IO, Connection, Either[NonEmptyList[UserSaveFailure], SavedUser]] =
+      override def save(user: User) =
         Kleisli.liftF {
           saveResult(user)
         }

@@ -29,7 +29,7 @@ class IntegrationSpec extends WordSpec with PowerMatchers with FailFastCirceSupp
           assert(status === StatusCodes.Unauthorized)
 
           loginReq ~> routes ~> check {
-            assert(status  === StatusCodes.OK)
+            assert(status === StatusCodes.OK)
 
             val resp = entityAs[Json]
 
