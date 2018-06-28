@@ -16,7 +16,7 @@ class AerospikeClient (config: AerospikeConfig) {
   def read(key: Key, binName: String): IO[Option[String]] = IO {
     for {
       record <- Option(client.get(null, key.asJava(config.namespace), binName))
-      value <- Option(record.getString("binName"))
+      value <- Option(record.getString(binName))
     } yield value
   }
 }

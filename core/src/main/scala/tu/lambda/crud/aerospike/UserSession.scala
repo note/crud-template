@@ -30,7 +30,7 @@ object UserSessionRepo extends UserSessionRepo {
       implicit val policy = WritePolicy(expiration)
 
       val key = USKey(session.token.toString)
-      val bin = USBin(session.userId.toString)
+      val bin = USBin(session.userId.id.toString)
       client.insert(key, bin)
     }
 
@@ -38,12 +38,14 @@ object UserSessionRepo extends UserSessionRepo {
     Kleisli { client =>
       client.read(USKey(token.toString), UserSessionBinName).flatMap {
         case Some(userIdString) =>
+          println("bazinga 100")
           val userSession = UserId.fromString(userIdString).map { userId =>
             UserSession(userId, token)
           }.toEither.right.map(_.some)
 
           IO.fromEither(userSession)
         case None =>
+          println("bazinga 101")
           IO.pure(Option.empty[UserSession])
       }
     }
