@@ -7,7 +7,6 @@ import cats.data.Validated.{invalidNel, valid, _}
 import cats.data.{Kleisli, NonEmptyList, OptionT, ValidatedNel}
 import cats.effect.IO
 import cats.implicits._
-import doobie._
 import tu.lambda.crud.AppContext
 import tu.lambda.crud.aerospike.{UserSession, UserSessionRepo}
 import tu.lambda.crud.dao.UserDao
@@ -16,19 +15,19 @@ import tu.lambda.crud.service.UserService
 import tu.lambda.crud.service.UserService.UserSaveFailure
 import tu.lambda.crud.service.UserService.UserSaveFailure._
 import tu.lambda.crud.utils.UUIDGenerator
+import tu.lambda.crud.db._
 
 import scala.concurrent.duration._
 
 class DbUserService(dao: UserDao, sessionRepo: UserSessionRepo, uuidGen: UUIDGenerator) extends UserService {
-  // TODO: extract it somewhere else?
-  val interpreter = KleisliInterpreter[IO].ConnectionInterpreter
 
   def save(user: User): Kleisli[IO, Connection, Either[NonEmptyList[UserSaveFailure], SavedUser]] = {
     validate(user).toEither match {
       case Right(validUser) =>
-        dao.saveUser(validUser)(uuidGen)
-          .foldMap[Kleisli[IO, Connection, ?]](interpreter)
-          .map(id => SavedUser.fromUser(id, user).asRight[NonEmptyList[UserSaveFailure]])
+        dao
+          .saveUser(validUser)(uuidGen)
+          .interpret
+          .map(id => SavedUser.fromUser(id, user).asRight)
       case Left(errors) =>
         Kleisli.liftF(IO.pure(errors.asLeft[SavedUser]))
     }
@@ -36,18 +35,17 @@ class DbUserService(dao: UserDao, sessionRepo: UserSessionRepo, uuidGen: UUIDGen
 
   def login(email: String, password: String): Kleisli[IO, AppContext, Option[UserSession]] = {
     for {
-      user <- getByCredentials(dao)(email, password).local[AppContext](_.dbConnection).mapF [OptionT[IO, ?], SavedUser](OptionT.apply)
+      user <- getByCredentials(email, password).local[AppContext](_.dbConnection).mapF [OptionT[IO, ?], SavedUser](OptionT.apply)
       session = UserSession(user.id, uuidGen.generate())
       // TODO: expiration - from config?
       _ <- sessionRepo.insert(10.minutes)(session).local[AppContext](_.aerospikeClient).mapF [OptionT[IO, ?], Unit](t => OptionT.apply(t.map(_.some)))
     } yield session
   }.mapF(_.value)
 
-  private def getByCredentials(dao: UserDao)(email: String, password: String): Kleisli[IO, Connection, Option[SavedUser]] = {
+  private def getByCredentials(email: String, password: String) =
     dao
       .getUserByCredentials(email, password)
-      .foldMap[Kleisli[IO, Connection, ?]](interpreter)
-  }
+      .interpret
 
   private def validate(user: User): ValidatedNel[UserSaveFailure, User] =
     Applicative[ValidatedNel[UserSaveFailure, ?]].map2(validateEmail(user.email), validatePassword(user.password))((_, _) => user)
