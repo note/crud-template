@@ -8,18 +8,17 @@ import cats.effect.IO
 import cats.implicits._
 import doobie.KleisliInterpreter
 import doobie.free.connection.ConnectionIO
-import doobie.util.transactor.Transactor
+import tu.lambda.crud.AppContext
 import tu.lambda.crud.aerospike.{AerospikeClientBase, UserSessionRepo}
-import tu.lambda.crud.dao.{BookmarkDao, UUIDGenerator}
+import tu.lambda.crud.dao.BookmarkDao
 import tu.lambda.crud.entity.{Bookmark, SavedBookmark}
+import tu.lambda.crud.service.BookmarkService
+import tu.lambda.crud.utils.UUIDGenerator
 
-final case class AppContext(transactor: Transactor[IO], aerospikeClient: AerospikeClientBase) {
-  // TODO: it's bad
-  def dbConnection: Connection = transactor.connect(transactor.kernel).unsafeRunSync()
+class DbBookmarkService(dao: BookmarkDao, sessionRepo: UserSessionRepo)
+                       (implicit uuidGen: UUIDGenerator)
+    extends BookmarkService {
 
-}
-
-class DbBookmarkService(dao: BookmarkDao, sessionRepo: UserSessionRepo)(implicit uuidGen: UUIDGenerator) {
   // TODO: extract it somewhere else?
   val interpreter = KleisliInterpreter[IO].ConnectionInterpreter
 
@@ -32,20 +31,19 @@ class DbBookmarkService(dao: BookmarkDao, sessionRepo: UserSessionRepo)(implicit
   }
 
 
-  def getByUserId(token: UUID): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, List[SavedBookmark]] = {
+  def getByToken(token: UUID): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, List[SavedBookmark]] = {
     for {
       sess <- aeroStack(sessionRepo.read(token))
       bookmarks <- stacked(dao.getBookmarksByUserId(sess.userId))
     } yield bookmarks
   }
 
-  def aeroStack[T](in: Kleisli[IO, AerospikeClientBase, Option[T]]) = {
+  private def aeroStack[T](in: Kleisli[IO, AerospikeClientBase, Option[T]]) = {
     in.local[AppContext](_.aerospikeClient).map(_.toRight[BookmarkError](NotGranted)).mapF [EitherT[IO, BookmarkError, ?], T](EitherT.apply)
   }
 
-  def stacked[T](in: ConnectionIO[T]): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, T] =
+  private def stacked[T](in: ConnectionIO[T]): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, T] =
     in.foldMap[Kleisli[IO, Connection, ?]](interpreter).local[AppContext](_.dbConnection).map(_.asRight[BookmarkError]).mapF[EitherT[IO, BookmarkError, ?], T](EitherT.apply)
-
 
 }
 

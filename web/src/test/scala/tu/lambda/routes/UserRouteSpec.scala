@@ -14,12 +14,12 @@ import io.circe.Json
 import io.circe.parser._
 import monix.execution.Scheduler
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
+import tu.lambda.crud.AppContext
 import tu.lambda.crud.aerospike._
 import tu.lambda.crud.entity.{SavedUser, User, UserId}
 import tu.lambda.crud.service.UserService
 import tu.lambda.crud.service.UserService.UserSaveFailure.IncorrectEmail
 import tu.lambda.crud.service.UserService._
-import tu.lambda.crud.service.impl.AppContext
 import tu.lambda.entity.Credentials
 
 class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with FailFastCirceSupport with ScalatestRouteTest {

@@ -8,19 +8,22 @@ import cats.data.{Kleisli, NonEmptyList, OptionT, ValidatedNel}
 import cats.effect.IO
 import cats.implicits._
 import doobie._
+import tu.lambda.crud.AppContext
 import tu.lambda.crud.aerospike.{UserSession, UserSessionRepo}
-import tu.lambda.crud.dao.{UUIDGenerator, UserDao}
+import tu.lambda.crud.dao.UserDao
 import tu.lambda.crud.entity.{SavedUser, User}
+import tu.lambda.crud.service.UserService
 import tu.lambda.crud.service.UserService.UserSaveFailure
 import tu.lambda.crud.service.UserService.UserSaveFailure._
+import tu.lambda.crud.utils.UUIDGenerator
 
 import scala.concurrent.duration._
 
-object DbUserService {
+class DbUserService(dao: UserDao, sessionRepo: UserSessionRepo, uuidGen: UUIDGenerator) extends UserService {
   // TODO: extract it somewhere else?
   val interpreter = KleisliInterpreter[IO].ConnectionInterpreter
 
-  def save(dao: UserDao, uuidGen: UUIDGenerator)(user: User): Kleisli[IO, Connection, Either[NonEmptyList[UserSaveFailure], SavedUser]] = {
+  def save(user: User): Kleisli[IO, Connection, Either[NonEmptyList[UserSaveFailure], SavedUser]] = {
     validate(user).toEither match {
       case Right(validUser) =>
         dao.saveUser(validUser)(uuidGen)
@@ -31,14 +34,14 @@ object DbUserService {
     }
   }
 
-  def login(dao: UserDao, sessionRepo: UserSessionRepo, uuidGen: UUIDGenerator)(email: String, password: String): Kleisli[OptionT[IO, ?], AppContext, UserSession] = {
+  def login(email: String, password: String): Kleisli[IO, AppContext, Option[UserSession]] = {
     for {
       user <- getByCredentials(dao)(email, password).local[AppContext](_.dbConnection).mapF [OptionT[IO, ?], SavedUser](OptionT.apply)
       session = UserSession(user.id, uuidGen.generate())
       // TODO: expiration - from config?
       _ <- sessionRepo.insert(10.minutes)(session).local[AppContext](_.aerospikeClient).mapF [OptionT[IO, ?], Unit](t => OptionT.apply(t.map(_.some)))
     } yield session
-  }
+  }.mapF(_.value)
 
   private def getByCredentials(dao: UserDao)(email: String, password: String): Kleisli[IO, Connection, Option[SavedUser]] = {
     dao

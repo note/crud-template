@@ -5,6 +5,7 @@ import doobie.implicits._
 import doobie.postgres.implicits._
 import tu.lambda.crud.entity.{Bookmark, BookmarkId, SavedBookmark, UserId}
 import tu.lambda.crud.db.meta._
+import tu.lambda.crud.utils.UUIDGenerator
 
 trait BookmarkDao {
   def saveBookmark(bookmark: Bookmark, userId: UserId)(implicit uuidGen: UUIDGenerator): ConnectionIO[BookmarkId]

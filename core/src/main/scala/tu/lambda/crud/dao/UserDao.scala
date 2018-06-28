@@ -1,20 +1,11 @@
 package tu.lambda.crud.dao
 
-import java.util.UUID
-
 import tu.lambda.crud.entity.{SavedUser, User, UserId}
 import doobie.ConnectionIO
 import doobie.implicits._
 import doobie.postgres.implicits._
+import tu.lambda.crud.utils.UUIDGenerator
 
-// TODO: move it somewhere else
-trait UUIDGenerator {
-  def generate(): UUID
-}
-
-object UUIDGenerator {
-  val default: UUIDGenerator = () => UUID.randomUUID()
-}
 
 trait UserDao {
   def saveUser(user: User)(implicit uuidGen: UUIDGenerator): ConnectionIO[UserId]

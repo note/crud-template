@@ -8,7 +8,8 @@ import cats.effect.IO
 import com.typesafe.scalalogging.StrictLogging
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import doobie.util.transactor.Transactor
-import tu.lambda.crud.service.impl.{AppContext, BookmarkError}
+import tu.lambda.crud.AppContext
+import tu.lambda.crud.service.impl.BookmarkError
 import tu.lambda.format.JsonFormats
 
 import scala.concurrent.Future

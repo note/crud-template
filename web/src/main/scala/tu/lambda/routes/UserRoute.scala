@@ -6,20 +6,21 @@ import cats.effect.IO
 import doobie.util.transactor.Transactor
 import io.circe.Json
 import io.circe.syntax._
+import tu.lambda.crud.AppContext
 import tu.lambda.crud.entity.User
 import tu.lambda.crud.service.UserService
-import tu.lambda.crud.service.impl.AppContext
 import tu.lambda.entity.Credentials
 
 
-class UserRoute(userService: UserService)(implicit transactor: Transactor[IO], appContext: AppContext)
+class UserRoute(userService: UserService)(implicit appContext: AppContext)
   extends BaseRoute {
+
+  private implicit val transactor: Transactor[IO] = appContext.transactor
 
   val route: Route =
     pathPrefix("users") {
       post {
         entity(as[User]) { user =>
-          // TODO: check if runAsync is how we want to run the code
           onSuccess(userService.save(user).exec) {
             case Right(savedUser) =>
               complete(StatusCodes.Created -> savedUser)
@@ -33,7 +34,6 @@ class UserRoute(userService: UserService)(implicit transactor: Transactor[IO], a
         path("login") {
           post {
             entity(as[Credentials]) { credentials =>
-              // TODO: check if runAsync is how we want to run the code
               onSuccess(userService.login(credentials.email, credentials.password).exec) {
                 case Some(user) =>
                   complete(user)

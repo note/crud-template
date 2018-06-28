@@ -4,9 +4,9 @@ import java.sql.Connection
 
 import cats.data.{Kleisli, NonEmptyList}
 import cats.effect.IO
+import tu.lambda.crud.AppContext
 import tu.lambda.crud.aerospike.UserSession
 import tu.lambda.crud.entity.{SavedUser, User}
-import tu.lambda.crud.service.impl.AppContext
 
 trait UserService {
   import UserService._

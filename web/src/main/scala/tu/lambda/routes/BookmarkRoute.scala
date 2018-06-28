@@ -4,9 +4,10 @@ import java.util.UUID
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{Directive, Directive1, Route}
+import tu.lambda.crud.AppContext
 import tu.lambda.crud.entity.Bookmark
 import tu.lambda.crud.service.BookmarkService
-import tu.lambda.crud.service.impl.{AppContext, NotGranted}
+import tu.lambda.crud.service.impl.NotGranted
 
 import scala.util.Try
 
@@ -29,7 +30,7 @@ class BookmarkRoute(bookmarkService: BookmarkService)(implicit ctx: AppContext)
         }
       } ~ get {
         authToken("Authorization") { token =>
-          onSuccess(bookmarkService.getByUserId(token).exec) {
+          onSuccess(bookmarkService.getByToken(token).exec) {
             case Right(bookmarks) =>
               complete(StatusCodes.OK -> bookmarks)
             case Left(NotGranted) =>
