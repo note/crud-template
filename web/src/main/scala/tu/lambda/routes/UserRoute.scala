@@ -11,8 +11,10 @@ import tu.lambda.crud.entity.User
 import tu.lambda.crud.service.UserService
 import tu.lambda.entity.Credentials
 
+import scala.concurrent.duration.Duration
 
-class UserRoute(userService: UserService)(implicit appContext: AppContext)
+
+class UserRoute(userService: UserService, tokenExpiration: Duration)(implicit appContext: AppContext)
   extends BaseRoute {
 
   private implicit val transactor: Transactor[IO] = appContext.transactor
@@ -34,7 +36,7 @@ class UserRoute(userService: UserService)(implicit appContext: AppContext)
         path("login") {
           post {
             entity(as[Credentials]) { credentials =>
-              onSuccess(userService.login(credentials.email, credentials.password).exec) {
+              onSuccess(login(credentials.email, credentials.password).exec) {
                 case Some(user) =>
                   complete(user)
                 case None =>
@@ -44,4 +46,7 @@ class UserRoute(userService: UserService)(implicit appContext: AppContext)
           }
         }
     }
+
+  // Example of currying and partial application
+  private val login = userService.login(tokenExpiration)_
 }

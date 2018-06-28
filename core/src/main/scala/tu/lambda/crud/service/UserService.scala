@@ -8,11 +8,13 @@ import tu.lambda.crud.AppContext
 import tu.lambda.crud.aerospike.UserSession
 import tu.lambda.crud.entity.{SavedUser, User}
 
+import scala.concurrent.duration.Duration
+
 trait UserService {
   import UserService._
 
   def save(user: User): Kleisli[IO, Connection, Either[NonEmptyList[UserSaveFailure], SavedUser]]
-  def login(email: String, password: String): Kleisli[IO, AppContext, Option[UserSession]]
+  def login(expiration: Duration)(email: String, password: String): Kleisli[IO, AppContext, Option[UserSession]]
 }
 
 object UserService {

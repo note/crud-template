@@ -21,6 +21,7 @@ import tu.lambda.crud.service.UserService
 import tu.lambda.crud.service.UserService.UserSaveFailure.IncorrectEmail
 import tu.lambda.crud.service.UserService._
 import tu.lambda.entity.Credentials
+import scala.concurrent.duration._
 
 class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with FailFastCirceSupport with ScalatestRouteTest {
   implicit val scheduler: Scheduler = monix.execution.Scheduler.Implicits.global
@@ -168,7 +169,7 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
           saveResult(user)
         }
 
-      override def login(email: String, password: String) =
+      override def login(expiration: Duration)(email: String, password: String) =
         Kleisli.liftF {
           Credentials(email, password) match {
             case `correctCreds` =>
@@ -181,6 +182,6 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
         }
     }
 
-    val userRoute = new UserRoute(userService)
+    val userRoute = new UserRoute(userService, 2.hours)
   }
 }

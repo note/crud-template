@@ -58,7 +58,7 @@ class IntegrationSpec extends WordSpec with PowerMatchers with FailFastCirceSupp
     val routes = {
       import akka.http.scaladsl.server.Directives._
 
-      val userRoute     = new UserRoute(userService)
+      val userRoute     = new UserRoute(userService, config.tokenExpiration)
       val bookmarkRoute = new BookmarkRoute(bookmarkService)
 
       userRoute.route ~ bookmarkRoute.route

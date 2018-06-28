@@ -31,12 +31,12 @@ class DbUserService(dao: UserDao, sessionRepo: UserSessionRepo)
     }
   }
 
-  def login(email: String, password: String) = {
+  def login(expiration: Duration)(email: String, password: String) = {
     for {
       user    <- getByCredentials(email, password)
       session = UserSession(user.id, uuidGen.generate())
       // TODO: expiration - from config?
-      _       <- sessionRepo.insert(10.minutes)(session).local[AppContext](_.aerospikeClient)
+      _       <- sessionRepo.insert(expiration)(session).local[AppContext](_.aerospikeClient)
                   .mapF [OptionT[IO, ?], Unit](t => OptionT.apply(t.map(_.some)))
     } yield session
   }.mapF(_.value)

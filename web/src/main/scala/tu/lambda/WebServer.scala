@@ -31,7 +31,7 @@ object WebServer extends AnyRef with Services with StrictLogging with RoutesRequ
 
     lazy val route = {
       val versionRoute  = new VersionRoute
-      val userRoute     = new UserRoute(userService)
+      val userRoute     = new UserRoute(userService, config.tokenExpiration)
       val bookmarkRoute = new BookmarkRoute(bookmarkService)
 
       requestWrapper(versionRoute.route ~ userRoute.route ~ bookmarkRoute.route)
