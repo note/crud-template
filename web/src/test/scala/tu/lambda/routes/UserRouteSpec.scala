@@ -6,15 +6,13 @@ import java.util.UUID
 import akka.http.scaladsl.model.{StatusCodes, _}
 import akka.http.scaladsl.server.MalformedRequestContentRejection
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import cats.data.Validated._
-import cats.data.{Kleisli, NonEmptyList, ValidatedNel}
+import cats.data.{Kleisli, NonEmptyList}
 import cats.effect.IO
 import cats.implicits._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import doobie.util.transactor.{Strategy, Transactor}
 import io.circe.Json
 import io.circe.parser._
-import monix.eval.Task
 import monix.execution.Scheduler
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import tu.lambda.crud.aerospike._
@@ -59,8 +57,8 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
     }
 
     "return error messages for incorrect JSON" in new Context {
-      override def saveResult(user: User): Task[ValidatedNel[UserSaveFailure, SavedUser]] =
-        Task.now(invalidNel(IncorrectEmail))
+      override def saveResult(user: User) =
+        IO.pure(NonEmptyList.of(IncorrectEmail).asLeft[SavedUser])
 
       val json =
         """
@@ -77,8 +75,8 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
     }
 
     "return error messages for inccorect input" in new Context {
-      override def saveResult(user: User): Task[ValidatedNel[UserSaveFailure, SavedUser]] =
-        Task.now(invalidNel(IncorrectEmail))
+      override def saveResult(user: User) =
+        IO.pure(NonEmptyList.of(IncorrectEmail).asLeft[SavedUser])
 
       val json =
         """
@@ -126,9 +124,8 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
         val expectedJson =
           parse(s"""
                    |{
-                   |  "id": "${userId.id.toString}",
-                   |	"email": "aa@example.com",
-                   |	"phone": "111222333"
+                   |  "userId": "${userId.id.toString}",
+                   |	"token": "${token.toString}"
                    |}
         """.stripMargin).right.get
         entityAs[Json] should equal(expectedJson)
@@ -154,31 +151,31 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
     val userId          = UserId(UUID.randomUUID)
     val correctCreds    = Credentials("correct", "correct")
     val incorrectCreds  = Credentials("incorrect", "incorrect")
+    val token           = UUID.randomUUID()
 
-    // TODO: it's super ugly
-
+    // TODO: it's super ugly, https://github.com/tpolecat/doobie/issues/460
     val s = Strategy.void
-    implicit val transactor: Transactor.Aux[IO, _] = Transactor.fromConnection[IO](null).copy(strategy0 = s)
+    implicit val transactor: Transactor[IO] = Transactor.fromConnection[IO](null).copy(strategy0 = s)
     val aerospikeClient = new AerospikeClientBase {
       override def insert(key: Key, bin: Bin)(implicit policy: WritePolicy): IO[Unit] = ???
       override def read(key: Key, binName: String): IO[Option[String]] = ???
     }
     implicit val appCtx: AppContext = AppContext(transactor, aerospikeClient)
 
-    def saveResult(user: User): Task[ValidatedNel[UserSaveFailure, SavedUser]] =
-      Task.now(valid(SavedUser.fromUser(userId, user)))
+    def saveResult(user: User) =
+      IO.pure(SavedUser.fromUser(userId, user).asRight[NonEmptyList[UserSaveFailure]])
 
     val userService = new UserService {
       override def save(user: User): Kleisli[IO, Connection, Either[NonEmptyList[UserSaveFailure], SavedUser]] =
         Kleisli.liftF {
-          IO.pure(SavedUser.fromUser(userId, user).asRight)
+          saveResult(user)
         }
 
       override def login(email: String, password: String) =
         Kleisli.liftF {
           Credentials(email, password) match {
             case `correctCreds` =>
-              IO.pure(UserSession(userId, UUID.randomUUID()).some)
+              IO.pure(UserSession(userId, token).some)
             case `incorrectCreds` =>
               IO.pure(Option.empty[UserSession])
             case _ =>

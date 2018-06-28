@@ -9,7 +9,7 @@ import akka.stream.ActorMaterializer
 import cats.data.{EitherT, Kleisli}
 import cats.effect.IO
 import com.typesafe.scalalogging.StrictLogging
-import doobie.util.transactor.Transactor.Aux
+import doobie.util.transactor.Transactor
 import pureconfig._
 import tu.lambda.config.AppConfig
 import tu.lambda.crud.aerospike.{AerospikeClient, UserSession, UserSessionRepo}
@@ -54,7 +54,7 @@ trait Services {
   val config = loadConfig[AppConfig].right.get
 
   implicit val uuidGen = UUIDGenerator.default
-  implicit val transactor: Aux[IO, Unit] = DbTransactor.transactor(config.db)
+  implicit val transactor: Transactor[IO] = DbTransactor.transactor(config.db)
   val aerospikeClient = new AerospikeClient(config.aerospike)
   implicit val appContext: AppContext = AppContext(transactor, aerospikeClient)
 

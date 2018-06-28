@@ -7,7 +7,7 @@ import cats.data.{EitherT, Kleisli}
 import cats.effect.IO
 import com.typesafe.scalalogging.StrictLogging
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
-import doobie.util.transactor.Transactor.Aux
+import doobie.util.transactor.Transactor
 import tu.lambda.crud.service.impl.{AppContext, BookmarkError}
 import tu.lambda.format.JsonFormats
 
@@ -19,7 +19,7 @@ trait BaseRoute extends Directives
   with JsonFormats {
 
   implicit class ToFuture[T](thunk: Kleisli[IO, Connection, T]) {
-    def exec(implicit transactor: Aux[IO, Unit]): Future[T] = transactor.exec.apply(thunk).unsafeToFuture()
+    def exec(implicit transactor: Transactor[IO]): Future[T] = transactor.exec.apply(thunk).unsafeToFuture()
   }
 
   implicit class AppCtxToFuture[T](thunk: Kleisli[IO, AppContext, T]) {

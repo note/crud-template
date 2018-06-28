@@ -13,9 +13,10 @@ import tu.lambda.crud.aerospike.{AerospikeClientBase, UserSessionRepo}
 import tu.lambda.crud.dao.{BookmarkDao, UUIDGenerator}
 import tu.lambda.crud.entity.{Bookmark, SavedBookmark}
 
-final case class AppContext(transactor: Transactor.Aux[IO, Unit], aerospikeClient: AerospikeClientBase) {
+final case class AppContext(transactor: Transactor[IO], aerospikeClient: AerospikeClientBase) {
   // TODO: it's bad
   def dbConnection: Connection = transactor.connect(transactor.kernel).unsafeRunSync()
+
 }
 
 class DbBookmarkService(dao: BookmarkDao, sessionRepo: UserSessionRepo)(implicit uuidGen: UUIDGenerator) {
