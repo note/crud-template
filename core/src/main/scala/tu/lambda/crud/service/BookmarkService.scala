@@ -9,6 +9,7 @@ import tu.lambda.crud.service.impl.{AppContext, BookmarkError}
 
 trait BookmarkService {
   def save(bookmark: Bookmark, token: UUID): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, SavedBookmark]
+  // TODO: rename it
   def getByUserId(token: UUID): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, List[SavedBookmark]]
 }
 

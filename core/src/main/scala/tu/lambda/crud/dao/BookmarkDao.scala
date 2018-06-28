@@ -25,6 +25,6 @@ object BookmarkDao extends BookmarkDao {
 
   override def getBookmarksByUserId(userId: UserId): ConnectionIO[List[SavedBookmark]] =
     sql"""SELECT id, user_id, url, description FROM bookmarks
-         |  WHERE userId = ${userId.id}
+         |  WHERE user_id = ${userId.id}
     """.stripMargin.query[SavedBookmark].to[List]
 }

@@ -19,7 +19,7 @@ lazy val web = (project in file("web"))
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, git.baseVersion, git.gitHeadCommit),
     buildInfoPackage := "tu.lambda",
     buildInfoUsePackageAsPath := true,
-    libraryDependencies ++= akkaHttp ++ circe ++ Seq(pureconfig, akkaHttpTestkit, scalatest)
+    libraryDependencies ++= akkaHttp ++ circe ++ Seq(pureconfig, akkaHttpTestkit, scalatest, flyway)
   )
   .enableFunTest
   .dependsOn(core)

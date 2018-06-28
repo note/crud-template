@@ -24,6 +24,9 @@ class AerospikeClient(config: AerospikeConfig) extends AerospikeClientBase {
       value <- Option(record.getString(binName))
     } yield value
   }
+
+  def truncate(namespace: String): Unit =
+    client.truncate(null, namespace, null, null)
 }
 
 final case class Key(setName: String, key: String) {

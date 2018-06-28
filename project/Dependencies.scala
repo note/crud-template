@@ -44,4 +44,6 @@ object Dependencies {
   val akkaHttpTestkit = "com.typesafe.akka"     %% "akka-http-testkit" % Versions.akkaHttp  % "test"
   val scalatest       = "org.scalatest"         %% "scalatest"         % Versions.scalatest % "test"
 
+  val flyway          = "org.flywaydb"          % "flyway-core"        % "4.2.0" % "test"
+
 }

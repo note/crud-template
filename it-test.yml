@@ -1,0 +1,30 @@
+version: '3.6'
+
+services:
+  sbt_it_test:
+    image: hseeberger/scala-sbt:8u171_2.12.6_1.1.5
+    environment:
+      - DB_URL=jdbc:postgresql://postgres:5432/crud
+      - DB_USER=crud
+      - DB_PASSWORD=password
+      - APP_PORT=8080
+    links:
+      - postgres_it_test
+      - aerospike_it_test
+    volumes:
+      - ./:/app/
+      - $HOME/.ivy2:/root/.ivy2
+      - $HOME/.sbt/boot:/root/.sbt/boot
+    entrypoint: sbt
+    working_dir: /app
+
+  postgres_it_test:
+    image: postgres:10.4
+    environment:
+      - POSTGRES_USER=crud
+      - POSTGRES_PASSWORD=password
+
+  aerospike_it_test:
+    image: aerospike/aerospike-server:4.2.0.3
+    environment:
+      - NAMESPACE=crud # unhardcode
