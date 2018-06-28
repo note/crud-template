@@ -1,12 +1,10 @@
 package tu.lambda.crud.service.impl
 
-import java.sql.Connection
 import java.util.UUID
 
 import cats.data.{EitherT, Kleisli}
 import cats.effect.IO
 import cats.implicits._
-import doobie.KleisliInterpreter
 import doobie.free.connection.ConnectionIO
 import tu.lambda.crud.AppContext
 import tu.lambda.crud.aerospike.{AerospikeClientBase, UserSessionRepo}
@@ -14,16 +12,14 @@ import tu.lambda.crud.dao.BookmarkDao
 import tu.lambda.crud.entity.{Bookmark, SavedBookmark}
 import tu.lambda.crud.service.BookmarkService
 import tu.lambda.crud.utils.UUIDGenerator
+import tu.lambda.crud.db._
 
 class DbBookmarkService(dao: BookmarkDao, sessionRepo: UserSessionRepo)
                        (implicit uuidGen: UUIDGenerator)
     extends BookmarkService {
 
-  // TODO: extract it somewhere else?
-  val interpreter = KleisliInterpreter[IO].ConnectionInterpreter
-
   // TODO: change token type to somehthing more meaningful
-  def save(bookmark: Bookmark, token: UUID): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, SavedBookmark] = {
+  def save(bookmark: Bookmark, token: UUID) = {
     for {
       sess <- aeroStack(sessionRepo.read(token))
       bookmarkId <- stacked(dao.saveBookmark(bookmark, sess.userId))
@@ -31,7 +27,7 @@ class DbBookmarkService(dao: BookmarkDao, sessionRepo: UserSessionRepo)
   }
 
 
-  def getByToken(token: UUID): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, List[SavedBookmark]] = {
+  def getByToken(token: UUID) = {
     for {
       sess <- aeroStack(sessionRepo.read(token))
       bookmarks <- stacked(dao.getBookmarksByUserId(sess.userId))
@@ -42,8 +38,8 @@ class DbBookmarkService(dao: BookmarkDao, sessionRepo: UserSessionRepo)
     in.local[AppContext](_.aerospikeClient).map(_.toRight[BookmarkError](NotGranted)).mapF [EitherT[IO, BookmarkError, ?], T](EitherT.apply)
   }
 
-  private def stacked[T](in: ConnectionIO[T]): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, T] =
-    in.foldMap[Kleisli[IO, Connection, ?]](interpreter).local[AppContext](_.dbConnection).map(_.asRight[BookmarkError]).mapF[EitherT[IO, BookmarkError, ?], T](EitherT.apply)
+  private def stacked[T](program: ConnectionIO[T]): Kleisli[EitherT[IO, BookmarkError, ?], AppContext, T] =
+    program.interpret.local[AppContext](_.dbConnection).map(_.asRight[BookmarkError]).mapF[EitherT[IO, BookmarkError, ?], T](EitherT.apply)
 
 }
 

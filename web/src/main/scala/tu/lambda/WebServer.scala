@@ -60,6 +60,6 @@ trait Services {
   val bookmarkDao = BookmarkDao
   val sessionRepo = UserSessionRepo
 
-  val userService     = new DbUserService(userDao, sessionRepo, uuidGen)
+  val userService     = new DbUserService(userDao, sessionRepo)
   val bookmarkService = new DbBookmarkService(bookmarkDao, sessionRepo)
 }

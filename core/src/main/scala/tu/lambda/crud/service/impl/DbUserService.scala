@@ -1,10 +1,7 @@
 package tu.lambda.crud.service.impl
 
-import java.sql.Connection
-
-import cats.Applicative
 import cats.data.Validated.{invalidNel, valid, _}
-import cats.data.{Kleisli, NonEmptyList, OptionT, ValidatedNel}
+import cats.data.{Kleisli, OptionT, ValidatedNel}
 import cats.effect.IO
 import cats.implicits._
 import tu.lambda.crud.AppContext
@@ -19,9 +16,10 @@ import tu.lambda.crud.db._
 
 import scala.concurrent.duration._
 
-class DbUserService(dao: UserDao, sessionRepo: UserSessionRepo, uuidGen: UUIDGenerator) extends UserService {
+class DbUserService(dao: UserDao, sessionRepo: UserSessionRepo)
+                   (implicit uuidGen: UUIDGenerator) extends UserService {
 
-  def save(user: User): Kleisli[IO, Connection, Either[NonEmptyList[UserSaveFailure], SavedUser]] = {
+  def save(user: User) = {
     validate(user).toEither match {
       case Right(validUser) =>
         dao
@@ -33,12 +31,13 @@ class DbUserService(dao: UserDao, sessionRepo: UserSessionRepo, uuidGen: UUIDGen
     }
   }
 
-  def login(email: String, password: String): Kleisli[IO, AppContext, Option[UserSession]] = {
+  def login(email: String, password: String) = {
     for {
-      user <- getByCredentials(email, password).local[AppContext](_.dbConnection).mapF [OptionT[IO, ?], SavedUser](OptionT.apply)
+      user    <- getByCredentials(email, password)
       session = UserSession(user.id, uuidGen.generate())
       // TODO: expiration - from config?
-      _ <- sessionRepo.insert(10.minutes)(session).local[AppContext](_.aerospikeClient).mapF [OptionT[IO, ?], Unit](t => OptionT.apply(t.map(_.some)))
+      _       <- sessionRepo.insert(10.minutes)(session).local[AppContext](_.aerospikeClient)
+                  .mapF [OptionT[IO, ?], Unit](t => OptionT.apply(t.map(_.some)))
     } yield session
   }.mapF(_.value)
 
@@ -46,9 +45,11 @@ class DbUserService(dao: UserDao, sessionRepo: UserSessionRepo, uuidGen: UUIDGen
     dao
       .getUserByCredentials(email, password)
       .interpret
+      .local[AppContext](_.dbConnection)
+      .mapF[OptionT[IO, ?], SavedUser](OptionT.apply)
 
   private def validate(user: User): ValidatedNel[UserSaveFailure, User] =
-    Applicative[ValidatedNel[UserSaveFailure, ?]].map2(validateEmail(user.email), validatePassword(user.password))((_, _) => user)
+    (validateEmail(user.email), validatePassword(user.password)).mapN((_, _) => user)
 
   private val emailPattern = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$".r
 
@@ -59,7 +60,7 @@ class DbUserService(dao: UserDao, sessionRepo: UserSessionRepo, uuidGen: UUIDGen
     }
 
   private def validatePassword(password: String): ValidatedNel[UserSaveFailure, Unit] =
-    Applicative[ValidatedNel[UserSaveFailure, ?]].map2(validatePasswordFormat(password), validatePasswordLength(password))((_, _) => ())
+    (validatePasswordFormat(password), validatePasswordLength(password)).mapN((_, _) => ())
 
   private def validatePasswordFormat(password: String): ValidatedNel[UserSaveFailure, Unit] =
     if (password.exists(_.isWhitespace)) {

@@ -18,6 +18,7 @@ object Settings {
     "-language:higherKinds",
     "-language:implicitConversions",
     "-Yno-adapted-args",
+    "-Ypartial-unification",
 //    "-Ywarn-dead-code", // useful in normal project but inconvenient for a talk
     "-Ywarn-infer-any",
     "-Ywarn-unused-import",

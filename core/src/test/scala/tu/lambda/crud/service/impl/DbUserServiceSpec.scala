@@ -28,7 +28,7 @@ class DbUserServiceSpec extends WordSpec with PowerMatchers with ScalaFutures {
       override def getUserByCredentials(email: String, password: String): doobie.ConnectionIO[Option[SavedUser]] = ???
     }
 
-    new DbUserService(dao, null, UUIDGenerator.default)
+    new DbUserService(dao, null)(UUIDGenerator.default)
   }
 
   "DbUserService.save" should {
