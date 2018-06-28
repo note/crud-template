@@ -37,7 +37,7 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
           |}
         """.stripMargin
 
-      val postRequest = Post("/users", entity = HttpEntity(ContentTypes.`application/json`, json))
+      val postRequest = Post("/users").withEntity(HttpEntity(ContentTypes.`application/json`, json))
 
       postRequest ~> userRoute.route ~> check {
         status should equal(StatusCodes.Created)
@@ -66,7 +66,7 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
           |	"email": "aa",
         """.stripMargin
 
-      val postRequest = Post("/users", entity = HttpEntity(ContentTypes.`application/json`, json))
+      val postRequest = Post("/users").withEntity(HttpEntity(ContentTypes.`application/json`, json))
 
       postRequest ~> userRoute.route ~> check {
         rejections.size should equal(1)
@@ -87,7 +87,7 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
           |}
         """.stripMargin
 
-      val postRequest = Post("/users", entity = HttpEntity(ContentTypes.`application/json`, json))
+      val postRequest = Post("/users").withEntity(HttpEntity(ContentTypes.`application/json`, json))
 
       postRequest ~> userRoute.route ~> check {
         status should equal(StatusCodes.BadRequest)
@@ -114,7 +114,7 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
            |}
         """.stripMargin
 
-      Post("/users/login", entity = HttpEntity(ContentTypes.`application/json`, json))
+      Post("/users/login").withEntity(HttpEntity(ContentTypes.`application/json`, json))
     }
 
     "return User if credentials are correct" in new Context {
@@ -154,8 +154,9 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
     val token           = UUID.randomUUID()
 
     // TODO: it's super ugly, https://github.com/tpolecat/doobie/issues/460
-    val s = Strategy.void
-    implicit val transactor: Transactor[IO] = Transactor.fromConnection[IO](null).copy(strategy0 = s)
+    implicit val transactor: Transactor[IO] =
+      Transactor.fromConnection[IO](null).copy(strategy0 = Strategy.void)
+
     val aerospikeClient = new AerospikeClientBase {
       override def insert(key: Key, bin: Bin)(implicit policy: WritePolicy): IO[Unit] = ???
       override def read(key: Key, binName: String): IO[Option[String]] = ???
