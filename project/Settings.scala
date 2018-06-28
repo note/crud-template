@@ -45,6 +45,17 @@ object Settings {
       showCurrentGitBranch,
       addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6")
     )
+
+
+
+    def enableFunTest: Project = {
+      lazy val FunTest = config("fun") extend(Test)
+
+      project
+        .configs(FunTest)
+        .settings(inConfig(FunTest)(Defaults.testSettings) : _*)
+    }
+
   }
 
   def flywayConfigFromFile(file: File) = {

@@ -21,6 +21,7 @@ lazy val web = (project in file("web"))
     buildInfoUsePackageAsPath := true,
     libraryDependencies ++= akkaHttp ++ circe ++ Seq(pureconfig, akkaHttpTestkit, scalatest)
   )
+  .enableFunTest
   .dependsOn(core)
 
 // TODO: unhardcode
