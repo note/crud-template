@@ -65,8 +65,6 @@ trait Services {
   val userService = new UserService {
     override def save(user: User) = DbUserService.save(userDao, uuidGen)(user)
 
-    override def getByCredentials(email: String, password: String) = DbUserService.getByCredentials(userDao)(email, password)
-
     override def login(email: String, password: String): Kleisli[IO, AppContext, Option[UserSession]] =
       DbUserService.login(userDao, sessionRepo, uuidGen)(email, password).mapF(_.value)
   }

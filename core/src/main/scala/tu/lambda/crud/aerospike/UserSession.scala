@@ -13,8 +13,8 @@ import scala.concurrent.duration.Duration
 final case class UserSession (userId: UserId, token: UUID)
 
 trait UserSessionRepo {
-  def insert(expiration: Duration)(session: UserSession): Kleisli[IO, AerospikeClient, Unit]
-  def read(token: UUID): Kleisli[IO, AerospikeClient, Option[UserSession]]
+  def insert(expiration: Duration)(session: UserSession): Kleisli[IO, AerospikeClientBase, Unit]
+  def read(token: UUID): Kleisli[IO, AerospikeClientBase, Option[UserSession]]
 }
 
 object UserSessionRepo extends UserSessionRepo {
@@ -25,7 +25,7 @@ object UserSessionRepo extends UserSessionRepo {
   private val USKey = Key.curried(UserSessionSetName)
   private val USBin = Bin.curried(UserSessionBinName)
 
-  def insert(expiration: Duration)(session: UserSession): Kleisli[IO, AerospikeClient, Unit] =
+  def insert(expiration: Duration)(session: UserSession): Kleisli[IO, AerospikeClientBase, Unit] =
     Kleisli { client =>
       implicit val policy = WritePolicy(expiration)
 
@@ -34,7 +34,7 @@ object UserSessionRepo extends UserSessionRepo {
       client.insert(key, bin)
     }
 
-  def read(token: UUID): Kleisli[IO, AerospikeClient, Option[UserSession]] =
+  def read(token: UUID): Kleisli[IO, AerospikeClientBase, Option[UserSession]] =
     Kleisli { client =>
       client.read(USKey(token.toString), UserSessionBinName).flatMap {
         case Some(userIdString) =>

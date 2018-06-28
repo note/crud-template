@@ -6,7 +6,12 @@ import tu.lambda.crud.config.AerospikeConfig
 
 import scala.concurrent.duration.Duration
 
-class AerospikeClient (config: AerospikeConfig) {
+trait AerospikeClientBase {
+  def insert(key: Key, bin: Bin)(implicit policy: WritePolicy): IO[Unit]
+  def read(key: Key, binName: String): IO[Option[String]]
+}
+
+class AerospikeClient(config: AerospikeConfig) extends AerospikeClientBase {
   private val client = new javaClient.AerospikeClient(config.host, config.port)
 
   def insert(key: Key, bin: Bin)(implicit policy: WritePolicy): IO[Unit] = IO {

@@ -9,11 +9,11 @@ import cats.implicits._
 import doobie.KleisliInterpreter
 import doobie.free.connection.ConnectionIO
 import doobie.util.transactor.Transactor
-import tu.lambda.crud.aerospike.{AerospikeClient, UserSessionRepo}
+import tu.lambda.crud.aerospike.{AerospikeClientBase, UserSessionRepo}
 import tu.lambda.crud.dao.{BookmarkDao, UUIDGenerator}
 import tu.lambda.crud.entity.{Bookmark, SavedBookmark}
 
-final case class AppContext(transactor: Transactor.Aux[IO, Unit], aerospikeClient: AerospikeClient) {
+final case class AppContext(transactor: Transactor.Aux[IO, Unit], aerospikeClient: AerospikeClientBase) {
   // TODO: it's bad
   def dbConnection: Connection = transactor.connect(transactor.kernel).unsafeRunSync()
 }
@@ -38,7 +38,7 @@ class DbBookmarkService(dao: BookmarkDao, sessionRepo: UserSessionRepo)(implicit
     } yield bookmarks
   }
 
-  def aeroStack[T](in: Kleisli[IO, AerospikeClient, Option[T]]) = {
+  def aeroStack[T](in: Kleisli[IO, AerospikeClientBase, Option[T]]) = {
     in.local[AppContext](_.aerospikeClient).map(_.toRight[BookmarkError](NotGranted)).mapF [EitherT[IO, BookmarkError, ?], T](EitherT.apply)
   }
 

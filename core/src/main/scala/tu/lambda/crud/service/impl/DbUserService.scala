@@ -31,12 +31,6 @@ object DbUserService {
     }
   }
 
-  def getByCredentials(dao: UserDao)(email: String, password: String): Kleisli[IO, Connection, Option[SavedUser]] = {
-    dao
-      .getUserByCredentials(email, password)
-      .foldMap[Kleisli[IO, Connection, ?]](interpreter)
-  }
-
   def login(dao: UserDao, sessionRepo: UserSessionRepo, uuidGen: UUIDGenerator)(email: String, password: String): Kleisli[OptionT[IO, ?], AppContext, UserSession] = {
     for {
       user <- getByCredentials(dao)(email, password).local[AppContext](_.dbConnection).mapF [OptionT[IO, ?], SavedUser](OptionT.apply)
@@ -44,6 +38,12 @@ object DbUserService {
       // TODO: expiration - from config?
       _ <- sessionRepo.insert(10.minutes)(session).local[AppContext](_.aerospikeClient).mapF [OptionT[IO, ?], Unit](t => OptionT.apply(t.map(_.some)))
     } yield session
+  }
+
+  private def getByCredentials(dao: UserDao)(email: String, password: String): Kleisli[IO, Connection, Option[SavedUser]] = {
+    dao
+      .getUserByCredentials(email, password)
+      .foldMap[Kleisli[IO, Connection, ?]](interpreter)
   }
 
   private def validate(user: User): ValidatedNel[UserSaveFailure, User] =

@@ -34,6 +34,6 @@ services:
     image: aerospike/aerospike-server:4.2.0.3
     # expose port for easier testing and debugging
     ports:
-      - 3000:3000
+      - 3030:3000
     environment:
       - NAMESPACE=crud # unhardcode

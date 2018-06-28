@@ -12,7 +12,6 @@ trait UserService {
   import UserService._
 
   def save(user: User): Kleisli[IO, Connection, Either[NonEmptyList[UserSaveFailure], SavedUser]]
-  def getByCredentials(email: String, password: String): Kleisli[IO, Connection, Option[SavedUser]]
   def login(email: String, password: String): Kleisli[IO, AppContext, Option[UserSession]]
 }
 
