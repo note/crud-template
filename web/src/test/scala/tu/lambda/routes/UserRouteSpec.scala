@@ -12,7 +12,6 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import doobie.util.transactor.{Strategy, Transactor}
 import io.circe.Json
 import io.circe.parser._
-import monix.execution.Scheduler
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import tu.lambda.crud.AppContext
 import tu.lambda.crud.aerospike._
@@ -24,8 +23,7 @@ import tu.lambda.entity.Credentials
 import scala.concurrent.duration._
 
 class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with FailFastCirceSupport with ScalatestRouteTest {
-  implicit val scheduler: Scheduler = monix.execution.Scheduler.Implicits.global
-
+  
   "UserRoute POST /users" should {
     "return saved user if input is correct" in new Context {
       val json =
