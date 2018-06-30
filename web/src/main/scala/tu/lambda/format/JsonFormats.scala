@@ -19,7 +19,7 @@ trait JsonFormats {
   implicit val saveUserEncoder: Encoder[SavedUser] = deriveEncoder[SavedUser]
 
   implicit val userIdEncoder: Encoder[UserId] =
-    Encoder.encodeString.contramap[UserId](_.id.toString)
+    Encoder.encodeString.contramap[UserId](_.toString)
 
   implicit val userIdDecoder: Decoder[UserId] = Decoder.decodeString.emap { str =>
     Either.catchNonFatal(UserId(UUID.fromString(str))).leftMap(t => "UserId")
@@ -34,7 +34,7 @@ trait JsonFormats {
   implicit val urlEncoder: Encoder[URL] = Encoder.encodeString.contramap[URL](_.toString)
 
   implicit val bookmarkIdEncoder: Encoder[BookmarkId] =
-    Encoder.encodeString.contramap[BookmarkId](_.id.toString)
+    Encoder.encodeString.contramap[BookmarkId](_.toString)
 
   implicit val bookmarkDecoder = deriveDecoder[Bookmark]
 

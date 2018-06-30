@@ -37,7 +37,6 @@ class DbUserService(dao: UserDao, sessionRepo: UserSessionRepo)
     for {
       user    <- getByCredentials(email, password)
       session = UserSession(user.id, uuidGen.generate())
-      // TODO: expiration - from config?
       _       <- sessionRepo.insert(expiration)(session).local[AppContext](_.aerospikeClient)
                   .mapF [OptionT[IO, ?], Unit](t => OptionT.apply(t.map(_.some)))
     } yield session

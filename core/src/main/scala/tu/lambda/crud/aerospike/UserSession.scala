@@ -30,7 +30,7 @@ object UserSessionRepo extends UserSessionRepo {
       implicit val policy = WritePolicy(expiration)
 
       val key = USKey(session.token.toString)
-      val bin = USBin(session.userId.id.toString)
+      val bin = USBin(session.userId.toString)
       client.insert(key, bin)
     }
 

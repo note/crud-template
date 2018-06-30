@@ -8,6 +8,7 @@ import doobie.postgres.implicits._
 import doobie.postgres._
 import doobie.postgres.sqlstate
 import tu.lambda.crud.utils.UUIDGenerator
+import tu.lambda.crud.db.meta._
 
 
 trait UserDao {

@@ -27,7 +27,6 @@ object UserService {
       override val message: String = "Incorrect email"
     }
 
-    // TODO: add this one!
     case object EmailAlreadyExists extends UserSaveFailure {
       override val message: String = "Email already exists"
     }

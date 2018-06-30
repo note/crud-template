@@ -1,20 +1,9 @@
 package tu.lambda.crud.entity
 
 import java.net.URL
-import java.util.UUID
 
-import scala.util.Try
-
-// TODO: try to user more specific types, think about refined, password as Array of bytes?
+// In real world project storing password as String might not be good idea
 final case class User(email: String, phone: String, password: String)
-
-final case class UserId(id: UUID) extends AnyVal
-
-object UserId {
-  def fromString(input: String): Try[UserId] = Try {
-    UserId(UUID.fromString(input))
-  }
-}
 
 final case class SavedUser(id: UserId, email: String, phone: String)
 
@@ -26,7 +15,6 @@ object SavedUser {
 // TalkExample: customer circe Decoder
 final case class BookmarksImport(bookmarks: List[Bookmark])
 
-final case class BookmarkId(id: UUID) extends AnyVal
 final case class Bookmark(url: URL, description: String)
 
 final case class SavedBookmark(id: BookmarkId, userId: UserId, url: URL, description: String)
