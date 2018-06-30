@@ -9,6 +9,7 @@ import scala.util.Try
 
 trait UserIdTag
 trait BookmarkIdTag
+trait TokenTag
 
 package object entity {
 
@@ -28,6 +29,14 @@ package object entity {
   object BookmarkId {
     def apply(uuid: UUID): BookmarkId =
       tag[BookmarkIdTag][UUID](uuid)
+  }
+
+  // in real world application UUID might not be the best choice...
+  type Token = UUID @@ TokenTag
+
+  object Token {
+    def apply(uuid: UUID): Token =
+      tag[TokenTag][UUID](uuid)
   }
 
 }

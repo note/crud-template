@@ -36,10 +36,10 @@ trait JsonFormats {
   implicit val bookmarkIdEncoder: Encoder[BookmarkId] =
     Encoder.encodeString.contramap[BookmarkId](_.toString)
 
-  implicit val bookmarkDecoder = deriveDecoder[Bookmark]
-
+  implicit val bookmarkDecoder      = deriveDecoder[Bookmark]
   implicit val savedBookmarkEncoder = deriveEncoder[SavedBookmark]
-
-  implicit val userSessionsEncoder = deriveEncoder[UserSession]
+  implicit val tokenEncoder         =
+    Encoder.encodeString.contramap[Token](_.toString)
+  implicit val userSessionsEncoder  = deriveEncoder[UserSession]
 
 }

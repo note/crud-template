@@ -1,7 +1,5 @@
 package tu.lambda.crud.service.impl
 
-import java.util.UUID
-
 import cats.data.{EitherT, Kleisli}
 import cats.effect.IO
 import cats.implicits._
@@ -9,7 +7,7 @@ import doobie.free.connection.ConnectionIO
 import tu.lambda.crud.AppContext
 import tu.lambda.crud.aerospike.{AerospikeClientBase, UserSessionRepo}
 import tu.lambda.crud.dao.BookmarkDao
-import tu.lambda.crud.entity.{Bookmark, SavedBookmark}
+import tu.lambda.crud.entity.{Bookmark, SavedBookmark, Token}
 import tu.lambda.crud.service.BookmarkService
 import tu.lambda.crud.utils.UUIDGenerator
 import tu.lambda.crud.db._
@@ -18,8 +16,7 @@ class DbBookmarkService(dao: BookmarkDao, sessionRepo: UserSessionRepo)
                        (implicit uuidGen: UUIDGenerator)
     extends BookmarkService {
 
-  // TODO: change token type to somehthing more meaningful
-  def save(bookmark: Bookmark, token: UUID) = {
+  def save(bookmark: Bookmark, token: Token) = {
     for {
       sess <- aeroStack(sessionRepo.read(token))
       bookmarkId <- stacked(dao.saveBookmark(bookmark, sess.userId))
@@ -27,7 +24,7 @@ class DbBookmarkService(dao: BookmarkDao, sessionRepo: UserSessionRepo)
   }
 
 
-  def getByToken(token: UUID) = {
+  def getByToken(token: Token) = {
     for {
       sess <- aeroStack(sessionRepo.read(token))
       bookmarks <- stacked(dao.getBookmarksByUserId(sess.userId))
