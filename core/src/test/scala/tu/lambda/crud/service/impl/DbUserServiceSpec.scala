@@ -5,7 +5,6 @@ import java.util.UUID
 import cats.data.NonEmptyList
 import cats.free.Free
 import cats.implicits._
-import doobie.free.connection.ConnectionOp
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import tu.lambda.crud.dao.UserDao
@@ -20,19 +19,22 @@ class DbUserServiceSpec extends WordSpec with PowerMatchers with ScalaFutures {
   val newUserId   = UserId(UUID.randomUUID())
   val correctUser = User("abc@example.com", "123456123", "abcdef")
 
-  val service = {
+  def service(createdUserId: Option[UserId]) = {
     val dao = new UserDao {
-      override def saveUser(user: User)(implicit uuidGen: UUIDGenerator): doobie.ConnectionIO[UserId] =
-        Free.pure[ConnectionOp, UserId](newUserId)
+      override def saveUser(user: User)(implicit uuidGen: UUIDGenerator) =
+        Free.pure(createdUserId)
 
-      override def getUserByCredentials(email: String, password: String): doobie.ConnectionIO[Option[SavedUser]] = ???
+      override def getUserByCredentials(email: String, password: String) = ???
     }
 
     new DbUserService(dao, null)(UUIDGenerator.default)
   }
 
   "DbUserService.save" should {
-    val save = (service.save _).andThen(_.apply(null).unsafeToFuture().futureValue)
+    def saveReturning(createdUserId: Option[UserId]) =
+      (service(createdUserId).save _).andThen(_.apply(null).unsafeToFuture().futureValue)
+
+    val save = saveReturning(newUserId.some)
 
     "return SavedUser for correct input" in {
       val res = save(correctUser)
@@ -56,6 +58,12 @@ class DbUserServiceSpec extends WordSpec with PowerMatchers with ScalaFutures {
       val res = save(correctUser.copy(password = "abcdef a"))
 
       assert(res == NonEmptyList.of(PasswordContainsWhiteSpace).asLeft[SavedUser])
+    }
+
+    "validate if email already exists in database" in {
+      val res = saveReturning(None)(correctUser)
+
+      assert(res == NonEmptyList.of(EmailAlreadyExists).asLeft[SavedUser])
     }
 
     "return combined errors" in {

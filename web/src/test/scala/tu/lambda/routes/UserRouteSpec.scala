@@ -23,7 +23,7 @@ import tu.lambda.entity.Credentials
 import scala.concurrent.duration._
 
 class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with FailFastCirceSupport with ScalatestRouteTest {
-  
+
   "UserRoute POST /users" should {
     "return saved user if input is correct" in new Context {
       val json =
