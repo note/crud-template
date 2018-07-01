@@ -1,7 +1,7 @@
 package tu.lambda.crud.service.impl
 
 import cats.data.Validated.{invalidNel, valid, _}
-import cats.data.{Kleisli, NonEmptyList, OptionT, ValidatedNel}
+import cats.data.{Kleisli, OptionT, ValidatedNel}
 import cats.effect.IO
 import cats.implicits._
 import tu.lambda.crud.AppContext
@@ -22,13 +22,7 @@ class DbUserService(dao: UserDao, sessionRepo: UserSessionRepo)
   def save(user: User) =
     validate(user).toEither match {
       case Right(validUser) =>
-        dao
-          .saveUser(validUser)(uuidGen)
-          .interpret
-          .map {
-            case Some(id) => SavedUser.fromUser(id, user).asRight
-            case None     => NonEmptyList.of(EmailAlreadyExists).asLeft
-          }
+        ???
       case Left(errors) =>
         Kleisli.liftF(IO.pure(errors.asLeft[SavedUser]))
     }
