@@ -2,6 +2,7 @@ package tu.lambda.crud.aerospike
 
 import cats.effect.IO
 import com.aerospike.{client => javaClient}
+import com.typesafe.scalalogging.StrictLogging
 import tu.lambda.crud.config.AerospikeConfig
 
 import scala.concurrent.duration.Duration
@@ -11,14 +12,18 @@ trait AerospikeClientBase {
   def read(key: Key, binName: String): IO[Option[String]]
 }
 
-class AerospikeClient(config: AerospikeConfig) extends AerospikeClientBase {
+class AerospikeClient(config: AerospikeConfig) extends AerospikeClientBase with StrictLogging {
   private val client = new javaClient.AerospikeClient(config.host, config.port)
 
   def insert(key: Key, bin: Bin)(implicit policy: WritePolicy): IO[Unit] = IO {
+    logger.info(s"Inserting key: $key...")
+
     client.put(policy.asJava, key.asJava(config.namespace), bin.asJava)
   }
 
   def read(key: Key, binName: String): IO[Option[String]] = IO {
+    logger.info(s"Reading key: $key...")
+
     for {
       record <- Option(client.get(null, key.asJava(config.namespace), binName))
       value <- Option(record.getString(binName))

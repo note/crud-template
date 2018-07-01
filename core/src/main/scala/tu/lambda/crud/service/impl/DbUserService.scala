@@ -7,7 +7,7 @@ import cats.implicits._
 import tu.lambda.crud.AppContext
 import tu.lambda.crud.aerospike.{UserSession, UserSessionRepo}
 import tu.lambda.crud.dao.UserDao
-import tu.lambda.crud.entity.{SavedUser, User}
+import tu.lambda.crud.entity.{SavedUser, Token, User}
 import tu.lambda.crud.service.UserService
 import tu.lambda.crud.service.UserService.UserSaveFailure
 import tu.lambda.crud.service.UserService.UserSaveFailure._
@@ -36,7 +36,7 @@ class DbUserService(dao: UserDao, sessionRepo: UserSessionRepo)
   def login(expiration: Duration)(email: String, password: String) = {
     for {
       user    <- getByCredentials(email, password)
-      session = UserSession(user.id, uuidGen.generate())
+      session = UserSession(user.id, Token.generate)
       _       <- sessionRepo.insert(expiration)(session).local[AppContext](_.aerospikeClient)
                   .mapF [OptionT[IO, ?], Unit](t => OptionT.apply(t.map(_.some)))
     } yield session

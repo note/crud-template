@@ -24,7 +24,6 @@ class BookmarkRoute(bookmarkService: BookmarkService)(implicit ctx: AppContext)
               case Right(savedBookmark) =>
                 complete(StatusCodes.Created -> savedBookmark)
               case Left(NotGranted) =>
-                println("bazinga 1")
                 complete(StatusCodes.Unauthorized)
             }
           }

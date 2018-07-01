@@ -12,7 +12,6 @@ trait RoutesRequestWrapper extends StrictLogging {
 
   private val exceptionHandler = ExceptionHandler {
     case e: Exception =>
-      println("here")
       logger.error(s"Exception during client request processing: ${e.getMessage}", e)
       complete(HttpResponse(StatusCodes.InternalServerError).withEntity("Internal server error"))
   }

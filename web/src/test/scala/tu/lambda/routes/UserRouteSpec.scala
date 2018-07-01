@@ -15,11 +15,12 @@ import io.circe.parser._
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import tu.lambda.crud.AppContext
 import tu.lambda.crud.aerospike._
-import tu.lambda.crud.entity.{SavedUser, User, UserId}
+import tu.lambda.crud.entity.{SavedUser, Token, User, UserId}
 import tu.lambda.crud.service.UserService
 import tu.lambda.crud.service.UserService.UserSaveFailure.IncorrectEmail
 import tu.lambda.crud.service.UserService._
 import tu.lambda.entity.Credentials
+
 import scala.concurrent.duration._
 
 class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with FailFastCirceSupport with ScalatestRouteTest {
@@ -43,7 +44,7 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
         val expectedJson =
           parse(s"""
           |{
-          | "id": "${userId.id.toString}",
+          | "id": "${userId.toString}",
           |	"email": "aa@example.com",
           |	"phone": "111222345"
           |}
@@ -120,7 +121,7 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
         val expectedJson =
           parse(s"""
                    |{
-                   |  "userId": "${userId.id.toString}",
+                   |  "userId": "${userId.toString}",
                    |	"token": "${token.toString}"
                    |}
         """.stripMargin).right.get
@@ -147,7 +148,7 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
     val userId          = UserId(UUID.randomUUID)
     val correctCreds    = Credentials("correct", "correct")
     val incorrectCreds  = Credentials("incorrect", "incorrect")
-    val token           = UUID.randomUUID()
+    val token           = Token(UUID.randomUUID())
 
     implicit val transactor: Transactor[IO] =
       Transactor.fromConnection[IO](null).copy(strategy0 = Strategy.void)
