@@ -2,7 +2,10 @@ package tu.lambda.crud.entity
 
 import java.net.URL
 
-// case class - immutable data object
+// case class - immutable value object:
+// - it does not have lifecycle, hence immutable
+// - it components define equals method - 2 different instances with the same values are
+//   considered equal
 final case class User(email: String, phone: String, password: String)
 
 final case class SavedUser(id: UserId, email: String, phone: String)
@@ -28,8 +31,16 @@ A bit better:
 case class User(id: Option[UUID], email: String, phone: String, password: String)
 
 But the essence of the problem remains - we are modelling two different entities with the same class.
- */
 
+This is wrong approach to data modelling. Preferable one is to:
+
+Make illegal states unrepresentable
+(Yaron Minsky)
+
+Make implicit concepts explicit
+
+(Eric Evans in Domain Driven Design)
+ */
 
 
 object SavedUser {

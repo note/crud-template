@@ -15,7 +15,7 @@ services:
       - ./:/app/
       - $HOME/.ivy2:/root/.ivy2
       - $HOME/.sbt/boot:/root/.sbt/boot
-    entrypoint: sbt
+    entrypoint: ["sbt", "-mem", "3096"]
     working_dir: /app
     ports:
       - 8080:8080

@@ -19,7 +19,7 @@ lazy val web = (project in file("web"))
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, git.baseVersion, git.gitHeadCommit),
     buildInfoPackage := "tu.lambda",
     buildInfoUsePackageAsPath := true,
-    libraryDependencies ++= akkaHttp ++ Seq(pureconfig, akkaHttpTestkit, scalatest, flyway)
+    libraryDependencies ++= akkaHttp ++ Seq(flyway, pureconfig, akkaHttpTestkit, scalatest)
   )
   .enableFunTest
   .dependsOn(core)
@@ -33,7 +33,7 @@ lazy val core = (project in file("core"))
   .settings(
     // circe should be declared for web but for sake of presentation (and console) it's better to
     // have it here
-    libraryDependencies ++= logging ++ Seq(aerospike) ++ doobie ++ circe ++ Seq(scalatest),
+    libraryDependencies ++= logging ++ Seq(aerospike, flyway) ++ doobie ++ circe ++ Seq(scalatest),
     flywayUrl := flywayCfg.url,
     flywayUser := flywayCfg.user,
     flywayPassword := flywayCfg.password,

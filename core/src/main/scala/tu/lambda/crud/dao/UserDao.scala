@@ -38,4 +38,16 @@ object UserDao extends UserDao {
           |  WHERE email = $email AND password = crypt($password, password)
        """.stripMargin.query[SavedUser].option
 
+  // does not reflect that insert may fail but it's more convenient for calling from console
+  def talkSaveUser(user: User)(implicit uuidGen: UUIDGenerator): ConnectionIO[UserId] = {
+    val uuid = uuidGen.generate()
+
+    sql"""INSERT INTO users (id, email, phone, password)
+         |  VALUES ($uuid,
+         |          ${user.email},
+         |          ${user.phone},
+         |          crypt(${user.password}, gen_salt('bf', 8)))
+      """.stripMargin.update.run
+      .map(_ => UserId(uuid))
+  }
 }

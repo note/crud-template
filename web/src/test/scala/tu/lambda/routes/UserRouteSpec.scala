@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.http.scaladsl.model.{StatusCodes, _}
 import akka.http.scaladsl.server.MalformedRequestContentRejection
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import cats.data.{Kleisli, NonEmptyList}
+import cats.data.Kleisli
 import cats.effect.IO
 import cats.implicits._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
@@ -20,6 +20,7 @@ import tu.lambda.crud.service.UserService
 import tu.lambda.crud.service.UserService.UserSaveFailure.IncorrectEmail
 import tu.lambda.crud.service.UserService._
 import tu.lambda.entity.Credentials
+import cats.data.Validated.invalidNel
 
 import scala.concurrent.duration._
 
@@ -55,7 +56,7 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
 
     "return error messages for incorrect JSON" in new Context {
       override def saveResult(user: User) =
-        IO.pure(NonEmptyList.of(IncorrectEmail).asLeft[SavedUser])
+        IO.pure(invalidNel[UserSaveFailure, SavedUser](IncorrectEmail))
 
       val json =
         """
@@ -73,7 +74,7 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
 
     "return error messages for inccorect input" in new Context {
       override def saveResult(user: User) =
-        IO.pure(NonEmptyList.of(IncorrectEmail).asLeft[SavedUser])
+        IO.pure(invalidNel[UserSaveFailure, SavedUser](IncorrectEmail))
 
       val json =
         """
@@ -160,7 +161,7 @@ class UserRouteSpec extends WordSpec with Matchers with BeforeAndAfterAll with F
     implicit val appCtx: AppContext = AppContext(transactor, aerospikeClient)
 
     def saveResult(user: User) =
-      IO.pure(SavedUser.fromUser(userId, user).asRight[NonEmptyList[UserSaveFailure]])
+      IO.pure(SavedUser.fromUser(userId, user).validNel[UserSaveFailure])
 
     val userService = new UserService {
       override def save(user: User) =
