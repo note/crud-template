@@ -2,6 +2,7 @@ package tu.lambda.routes
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
+import cats.data.Validated.{Invalid, Valid}
 import cats.effect.IO
 import doobie.util.transactor.Transactor
 import io.circe.Json
@@ -24,9 +25,9 @@ class UserRoute(userService: UserService, tokenExpiration: Duration)(implicit ap
       post {
         entity(as[User]) { user =>
           onSuccess(userService.save(user).exec) {
-            case Right(savedUser) =>
+            case Valid(savedUser) =>
               complete(StatusCodes.Created -> savedUser)
-            case Left(errors) =>
+            case Invalid(errors) =>
               val msgs = errors.map(_.message)
               val msgsJson = Json.obj("messages" -> msgs.toList.asJson)
               complete(StatusCodes.BadRequest -> msgsJson)

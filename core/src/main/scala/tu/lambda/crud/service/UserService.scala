@@ -2,7 +2,7 @@ package tu.lambda.crud.service
 
 import java.sql.Connection
 
-import cats.data.{Kleisli, NonEmptyList}
+import cats.data.{Kleisli, ValidatedNel}
 import cats.effect.IO
 import tu.lambda.crud.AppContext
 import tu.lambda.crud.aerospike.UserSession
@@ -13,7 +13,7 @@ import scala.concurrent.duration.Duration
 trait UserService {
   import UserService._
 
-  def save(user: User): Kleisli[IO, Connection, Either[NonEmptyList[UserSaveFailure], SavedUser]]
+  def save(user: User): Kleisli[IO, Connection, ValidatedNel[UserSaveFailure, SavedUser]]
   def login(expiration: Duration)(email: String, password: String): Kleisli[IO, AppContext, Option[UserSession]]
 }
 

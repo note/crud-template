@@ -20,11 +20,11 @@ class DbUserService(dao: UserDao, sessionRepo: UserSessionRepo)
                    (implicit uuidGen: UUIDGenerator) extends UserService {
 
   def save(user: User) =
-    validate(user).toEither match {
-      case Right(validUser) =>
+    validate(user) match {
+      case Valid(validUser) =>
         ???
-      case Left(errors) =>
-        Kleisli.liftF(IO.pure(errors.asLeft[SavedUser]))
+      case Invalid(errors) =>
+        Kleisli.liftF(IO.pure(errors.invalid))
     }
 
   def login(expiration: Duration)(email: String, password: String) = {
@@ -65,10 +65,6 @@ class DbUserService(dao: UserDao, sessionRepo: UserSessionRepo)
     }
 
   private def validatePasswordLength(password: String): ValidatedNel[UserSaveFailure, Unit] =
-    if (password.size >= 6) {
-      valid(())
-    } else {
-      invalidNel(PasswordTooShort)
-    }
+    ???
 
 }

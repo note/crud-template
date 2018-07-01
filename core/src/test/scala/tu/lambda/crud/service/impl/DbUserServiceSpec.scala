@@ -49,7 +49,7 @@ class DbUserServiceSpec extends WordSpec with PowerMatchers with ScalaFutures {
     }
 
     "validate password length" in {
-      val res = save(correctUser.copy(password = ""))
+      val res = save(correctUser.copy(password = "abcde"))
 
       assert(res == NonEmptyList.of(PasswordTooShort).asLeft[SavedUser])
     }
