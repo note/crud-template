@@ -21,7 +21,7 @@ import tu.lambda.routes.{BookmarkRoute, UserRoute, VersionRoute}
 import scala.util.{Failure, Success}
 
 object WebServer extends AnyRef with Services with StrictLogging with RoutesRequestWrapper {
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     implicit val system       = ActorSystem("crud-template-http-system")
     implicit val materializer = ActorMaterializer()
 

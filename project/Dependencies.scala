@@ -12,6 +12,7 @@ object Dependencies {
     val scalaLogging    = "3.9.0"
     val doobie          = "0.5.3"
     val aerospike       = "4.0.2"
+    val flyway          = "4.2.0"
   }
 
   val akkaHttp = Seq(
@@ -42,6 +43,6 @@ object Dependencies {
   val akkaHttpTestkit = "com.typesafe.akka"     %% "akka-http-testkit" % Versions.akkaHttp  % "test"
   val scalatest       = "org.scalatest"         %% "scalatest"         % Versions.scalatest % "test"
 
-  val flyway          = "org.flywaydb"          % "flyway-core"        % "4.2.0" % "test"
+  val flyway          = "org.flywaydb"          % "flyway-core"        % Versions.flyway    % "test"
 
 }
