@@ -1,6 +1,7 @@
 package tu.lambda.format
 
 import java.net.URL
+
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
 import tu.lambda.crud.aerospike.UserSession
@@ -10,13 +11,7 @@ import tu.lambda.entity.Credentials
 import scala.util.Try
 
 trait JsonFormats {
-  // Leave it unimplemented as an TalkExample:
-  implicit val userDecoder: Decoder[User] = deriveDecoder[User]
-
-  implicit val saveUserEncoder: Encoder[SavedUser] = deriveEncoder[SavedUser]
-
-  implicit val userIdEncoder: Encoder[UserId] =
-    Encoder.encodeString.contramap[UserId](_.toString)
+//  implicit val userDecoder: Decoder[User] = ???
 
   implicit val credentialsDecoder = deriveDecoder[Credentials]
 
@@ -30,9 +25,8 @@ trait JsonFormats {
     Encoder.encodeString.contramap[BookmarkId](_.toString)
 
   implicit val bookmarkDecoder      = deriveDecoder[Bookmark]
-  implicit val savedBookmarkEncoder = deriveEncoder[SavedBookmark]
-  implicit val tokenEncoder         =
-    Encoder.encodeString.contramap[Token](_.toString)
-  implicit val userSessionsEncoder  = deriveEncoder[UserSession]
+  implicit val savedBookmarkEncoder: Encoder[SavedBookmark] = ???
+  implicit val tokenEncoder         = Encoder.encodeString.contramap[Token](_.toString)
+  implicit val userSessionsEncoder: Encoder[UserSession] = ???
 
 }
