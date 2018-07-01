@@ -2,7 +2,11 @@ package tu.lambda.crud.entity
 
 import java.net.URL
 
+// case class - immutable data object
 final case class User(email: String, phone: String, password: String)
+
+final case class SavedUser(id: UserId, email: String, phone: String)
+
 /*
 Naively modelled:
 case class User(id: UUID, email: String, phone: String, password: String)
@@ -26,7 +30,7 @@ case class User(id: Option[UUID], email: String, phone: String, password: String
 But the essence of the problem remains - we are modelling two different entities with the same class.
  */
 
-final case class SavedUser(id: UserId, email: String, phone: String)
+
 
 object SavedUser {
   def fromUser(id: UserId, user: User): SavedUser =
