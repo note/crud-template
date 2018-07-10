@@ -8,7 +8,7 @@ working version of the code switch to `demo-with-solutions` branch.
 Run the following:
 
 ```bash
-npm install && node plugin/notes-server
+cd presentation && npm install && node plugin/notes-server
 ```
 
 Then follow navigate to returned URL to view the presentation.
