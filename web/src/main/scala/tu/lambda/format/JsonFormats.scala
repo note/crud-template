@@ -11,7 +11,10 @@ import tu.lambda.entity.Credentials
 import scala.util.Try
 
 trait JsonFormats {
-//  implicit val userDecoder: Decoder[User] = ???
+  implicit val userDecoder: Decoder[User] = deriveDecoder[User]
+
+  implicit val userIdEncoder    = Encoder.encodeString.contramap[UserId](_.toString)
+  implicit val savedUserEncoder = deriveEncoder[SavedUser]
 
   implicit val credentialsDecoder = deriveDecoder[Credentials]
 
@@ -25,8 +28,8 @@ trait JsonFormats {
     Encoder.encodeString.contramap[BookmarkId](_.toString)
 
   implicit val bookmarkDecoder      = deriveDecoder[Bookmark]
-  implicit val savedBookmarkEncoder: Encoder[SavedBookmark] = ???
+  implicit val savedBookmarkEncoder: Encoder[SavedBookmark] = deriveEncoder[SavedBookmark]
   implicit val tokenEncoder         = Encoder.encodeString.contramap[Token](_.toString)
-  implicit val userSessionsEncoder: Encoder[UserSession] = ???
+  implicit val userSessionsEncoder: Encoder[UserSession] = deriveEncoder[UserSession]
 
 }

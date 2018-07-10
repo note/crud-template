@@ -22,7 +22,10 @@ class DbUserService(dao: UserDao, sessionRepo: UserSessionRepo)
   def save(user: User) =
     validate(user) match {
       case Valid(validUser) =>
-        ???
+        dao.saveUser(validUser).interpret.map {
+          case Some(userId) => SavedUser.fromUser(userId, validUser).valid
+          case None         => EmailAlreadyExists.invalidNel
+        }
       case Invalid(errors) =>
         Kleisli.liftF(IO.pure(errors.invalid))
     }
@@ -65,6 +68,10 @@ class DbUserService(dao: UserDao, sessionRepo: UserSessionRepo)
     }
 
   private def validatePasswordLength(password: String): ValidatedNel[UserSaveFailure, Unit] =
-    ???
+    if (password.size >= 6) {
+      valid(())
+    } else {
+      invalidNel(PasswordTooShort)
+    }
 
 }
