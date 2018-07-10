@@ -1,0 +1,619 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/solarized.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<style>
+			div.crud-references {
+				margin-top: 100px;
+			}
+			.crud-references p {
+				font-size: 70%;
+			}
+		</style>
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides" style="font-size:80%">
+				<!-- INTRODUCTION -->
+				<section>
+					<section>
+						<h2>Pragmatic functional programming in Scala</h2>
+						<h3>Michał Sitko</h3>
+					</section>
+					<section>
+						<h3>Goals of the presentation</h3>
+						<ul>
+							<li>Give the feeling of developing in Scala</li>
+							<li>Present the benefits of FP techniques</li>
+							<li>Focus on real world problems</li>
+						</ul>
+					</section>
+
+					<section>
+						<h3>Non-goals of the presentation</h3>
+						<ul>
+							<li>Explain Scala concepts in detail</li>
+							<li>Explain FP concepts in detail</li>
+						</ul>
+					</section>
+
+					<section>
+						<h2>Plan for a talk</h2>
+						<ul>
+							<li>Live coding</li>
+							<li>Simple CRUD application</li>
+							<li>Focus on developer experience</li>
+							<li>Rather broad than deep</li>
+							<li>How FP fits in bigger picture (if time allows)</li>
+						</ul>
+					</section>
+
+					<section>
+						<h2>Questions</h2>
+						<ul>
+							<li>Questions are very welcomed</li>
+							<li>However with any question requiring longer answer we will need to wait to the end of the talk</li>
+						</ul>
+					</section>
+				</section>
+
+				<!-- High level application overview -->
+				<section>
+					<section>
+						<h3>Application overview</h3>
+						<p>Simple bookmarking application</p>
+						<ul>
+							<li>POST /users - creating user account</li>
+							<li>POST /users/login - login</li>
+							<li>POST /bookmarks - adding a bookmark</li>
+							<li>GET /bookmarks - listing bookmarks</li>
+						</ul>
+					</section>
+					<section>
+						<h3>General architecture</h3>
+						<ul>
+							<img src="images/GeneralArchitecture.svg" />
+						</ul>
+					</section>
+					<section>
+						<h3>User flow</h3>
+						<ul>
+							<img src="images/UserFlow.svg" />
+						</ul>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Scala in 2 minutes</h2>
+						<ul>
+							<li>Statically typed language</li>
+							<l1>First version in 2004</l1>
+							<li>Main platform - JVM, JS and LLVM also available</li>
+							<li>Multi paradigm: OOP and FP</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Type inference</h2>
+							<pre><code class="hljs" data-trim contenteditable>
+@ val n: Int = 29 // you can add type annotation
+@ val n = 29 // but you don't have to
+
+
+// works for more advanced cases:
+@ val m = List("hello", "world!").map(s => (s -> s.size)).toMap
+m: Map[String, Int] = Map("hello" -> 5, "world!" -> 6)
+
+// devoid enough context compiler may infer something very general...
+@ val optionalInt = None
+optionalInt: None.type = None
+
+// with more context it does the right job:
+@ val optionalInt: Option[Int] = None
+optionalInt: Option[Int] = None
+					</code></pre>
+					</section>
+					<section>
+						<h2>Everything is an expression</h2>
+							<pre><code class="hljs" data-trim contenteditable>
+def toDouble(in: String, default: Double): Double = 
+  Try(in.toDouble) match {
+    case Success(n)  => n
+    case Failure(_)  => default
+  }
+
+> toDouble("4.5", 0.0)
+res: Double = 4.5
+						</code></pre>
+					</section>
+
+					<section>
+						<h2>Implicits</h2>
+						<pre><code class="hljs" data-trim contenteditable>
+def saveUser(user: User)(userDao: UserDao): Option[User] = 
+  userDao.saveUser(user)
+
+saveUser(user)(userDao)
+
+// can be rewritten with implicits as:
+def saveUser2(user: User)(implicit userDao: UserDao): Option[User]
+  userDao.saveUser(user)
+
+implicit val userDao: UserDao = ...
+saveUser2(user)
+// you still can use it as previously:
+saveUser2(user)(userDao)
+						</code></pre>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>SBT</h2>
+						<ul>
+							<li>first choice of build tool in Scala land</li>
+							<li>build written in Scala</li>
+							<li>has its own console</li>
+						</ul>
+
+						<br />
+						<div class="crud-references">
+							<p><a href="https://kubuszok.com/2018/relearn-your-sbt/">Relearn your SBT</a> by Mateusz Kubuszok</p>
+							<p><a href="http://www.lihaoyi.com/post/SowhatswrongwithSBT.html">So, what's wrong with SBT?</a> by Li Haoyi</p>
+						</div>
+					</section>
+
+					<section>
+						<h2>Frameworkless</h2>
+						<p>Working definition of framework:</p>
+						<p>If you don't write your own main method you use a framework</p>
+						<p>Also, usually tries to tackle multiple concerns</p>
+
+						<br />
+						<div class="crud-references">
+							<p><a href="https://blog.softwaremill.com/dont-fear-the-main-1b9612ea6467">Don't fear the main</a> by Adam Warski</p>
+							<p><a href="https://www.yegor256.com/2014/10/03/di-containers-are-evil.html">DI Containers are Code Polluters</a> by Yegor Bugayenko</p>
+						</div>
+					</section>
+					<section>
+						<h2>Alternative - stack of small libraries</h2>
+						
+						<table>
+							<thead>
+								<tr>
+									<th>Framework</th>
+									<th>Set of libraries</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>main function has been written</td>
+									<td>you write main function</td>
+								</tr>
+								<tr>
+									<td>Framework calls your code</td>
+									<td>Your code calls library code</td>
+								</tr>
+								<tr>
+									<td>Predefined set of libraries and their versions</td>
+									<td>Unconstrained selection of libraries</td>
+								</tr>
+							</tbody>
+						</table>
+
+					</section>
+
+					<section>
+						<h2>Frameworks constraint</h2>
+						<h3>Example - initialization code</h3>
+							<img src="images/StartupProblems.png" />
+					</section>
+
+					<section>
+						<p>Let's dive into the code...</p>
+					</section>
+				</section>
+
+				<!-- TYPECLASSES -->
+				<section>
+					<section>
+						<h2>Typeclasses</h2>
+						<p>io.circe.Encoder and io.circe.Decoder are typeclasses</p>
+						<p>Typeclasses enables parametric polymorphism</p>
+
+						<div class="crud-references">
+							<p><a href="https://www.youtube.com/watch?v=X3OunZpyGPc">Having a cake and eating it too. Introduction to Typeclasses</a> by Paweł Szulc</p>
+						</div>
+					</section>
+
+					<section>
+						<h2>Subtyping - runtime polymorphism</h2>
+						<pre><code class="hljs" data-trim contenteditable>
+interface JsonSerializable {
+	String noSpaces();
+}
+
+String printAsJson(entity: JsonSerializable) {
+	return entity.noSpaces();
+}
+
+class User implements JsonSerializable
+printAsJson(user)
+						</code></pre>
+						<ul>
+							<li>What if we don't control class User?</li>
+							<li>What if we want class User to be also AerospikeSerializable, DBSerializable and so on?</li>
+							<li>What if in some cases we want to provide different implementation?</li>
+						</ul>
+					</section>
+
+					<section>
+						<h2>Typeclass Encoder</h2>
+						<pre><code class="hljs" data-trim contenteditable>
+trait Encoder[T] {
+	def apply(t: T): Json
+}
+
+// code requiring Encoder[T]:
+def printAsJson[T](entity: T)(implicit e: Encoder[T]): String = 
+	e.apply(entity).noSpaces
+
+// feels more lightweight with syntax sugar:
+def printAsJson[T: Encoder](entity: T): String = 
+	Encoder[T].apply(entity).noSpaces
+
+
+// code calling printAsJson:
+val user: User = ???
+val userEncoder: Encoder[User] = ???
+printAsJson(user)(userEncoder)
+						</code></pre>
+					</section>
+
+					<section>
+						<h2>There are even typeclasses for `equal` and `toString`</h2>
+						<pre><code class="hljs" data-trim contenteditable>
+import cats.{Eq, Show}
+
+// you can require multiple typeclass instances
+def assert[T : Eq : Show](a1: T, a2: T): String = {
+  if(Eq[T].eqv(a1, a2)) {
+    "OK"
+  } else {
+    s"${Show[T].show(a1)} != ${Show[T].show(a2)}"
+  }
+}
+						</code></pre>
+					</section>
+
+					<section>
+						<h2>Typeclasses - compile time, typesafe monkey patching</h2>
+						<pre><code class="hljs" data-trim contenteditable>
+trait IsPalindrome[T] {
+  def isPalindrome(t: T): Boolean
+}
+
+def allPalindromes[T : IsPalindrome](xs: List[T]): Boolean = 
+  xs.forall(implicitly[IsPalindrome[T]].isPalindrome)
+
+implicit val stringPalindrome = 
+  new IsPalindrome[String] { def isPalindrome(s: String) = ??? }
+
+// we enriched built-in type String with isPalindrome method
+allPalindromes(List("aba", "cc"))
+// res5: Boolean = true
+						</code></pre>
+					</section>
+
+					<section>
+						<ul>
+							<li>Decoupling of data and behaviour</li>
+							<ul>
+								<li>You can extend existing types with any method</li>
+								<li>Greater flexibility - you provide instance on call site</li>
+							</ul>
+							<li>Compile time mechanism - no runtime dispatch</li>
+							<li>Typeclass derivation</li>
+						</ul>
+						
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Manual Dependency Injection</h2>
+							<p>Flexible and solid way of doing DI</p>
+							<pre><code class="hljs" data-trim contenteditable>
+class DbUserService(dao: UserDao) {
+	def save(user: User): Future[Result] = ???
+}
+							</code></pre>
+
+							<ul>
+								<li>No DI framework</li>
+								<li>Uses basic concepts of language</li>
+								<li>Zero learning curve</li>
+							</ul>
+
+						<div class="crud-references">
+							<p><a href="http://di-in-scala.github.io/">DI in Scala: Guide</a> by Adam Warski</p>
+						</div>
+					</section>
+
+					<section>
+						<h2>Partial application</h2>
+							<pre><code class="hljs" data-trim contenteditable>
+object DbUserService {
+	def save(user: User): UserDao => Future[Result] = ???
+}
+
+// nice, but how to compose?
+def anotherOp(userId: UserId): UserDao => Future[Int] = ???
+
+def compose(user: User): UserDao => Future[Int] = { userDao: UserDao =>
+  for {
+    saved <- save(user)(userDao)
+    res   <- anotherOp(saved.id)(userDao)
+  } yield res
+}
+							</code></pre>
+					</section>
+
+					<section>
+						<h2>Refinement - Kleisli</h2>
+							<pre><code class="hljs" data-trim contenteditable>
+def save(user: User): Kleisli[Future, UserDao, SavedUser] = ???
+def anotherOp(userId: UserId): Kleisli[Future, UserDao, Int] = ???
+
+def compose(user: User): Kleisli[Future, UserDao, Int] =
+  for {
+    saved <- save(user)
+    res   <- anotherOp(saved.id)
+  } yield res
+							</code></pre>
+
+
+						<div class="crud-references">
+							<p><a href="https://typelevel.org/cats/datatypes/kleisli.html">cats docs on Kleisli</a></p>
+							<p><a href="http://debasishg.blogspot.com/2015/02/functional-patterns-in-domain-modeling.html">Composing a domain workflow with statically checked invariants</a> by Debasish Ghosh</p>
+						</div>
+					</section>
+
+					<section>
+						<h2>Refinement - IO</h2>
+							<pre><code class="hljs" data-trim contenteditable>
+def save(user: User): Kleisli[IO, UserDao, SavedUser] = ???
+def anotherOp(userId: UserId): Kleisli[IO, UserDao, Int] = ???
+
+def compose(user: User): Kleisli[IO, UserDao, Int] =
+  for {
+    saved <- save(user)
+    res   <- anotherOp(saved.id)
+  } yield res
+							</code></pre>
+
+							<div class="crud-references">
+								<p><a href="https://typelevel.org/cats/datatypes/kleisli.html">Scalaz 8 IO vs Akka (typed) actors vs Monix</a> by Adam Warski</p>
+							</div>
+							
+					</section>
+
+					<section>
+						<h2>Big idea - separation of description of computation and its execution</h2>
+							<ul>
+								<li>Delaying actual execution as much as possible</li>
+								<li>Actual effects performed at the end of the world</li>
+								<li>Idea taken to extreme leads to Free Monad</li>
+								<li>Very general concept which starts to be applied in various other fields e.g. Chef or Puppet vs Terraform or Nix</li>
+								<li>It can be generalized also to types and any other decisions - try to defer them to the last moments (especially when writing libraries)</li>
+							</ul>
+					</section>
+
+					<section>
+						<blockquote>
+							Server templating is a key component of the shift to immutable infastructure. This idea is inspired by functional programming, where variables are immutable, so once you’ve set a variable to a value, you can never change that variable again.
+	The idea behing immutable infrastructure is similar: once you’ve deployed a server, you never make changed to it again. If you need to update something you create a new image from your server template and you deploy it on a new server. Since servers never change, it’s a lot easier to reason about what’s deployed.
+
+						</blockquote>
+						<p>Terraform: Up and running By Yevgeniy Brikman</p>
+					</section>
+
+					<section>
+						<h2>Side effects vs Effects</h2>
+						<table>
+							<thead>
+								<tr>
+									<th>Side effects</th>
+									<th>Effects</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>implicit</td>
+									<td>explicit</td>
+								</tr>
+								<tr>
+									<td>not reflected on type level</td>
+									<td>reflected on type level</td>
+								</tr>
+							</tbody>
+						</table>
+					</section>
+
+					<section>
+						<h2>Side effects vs Effects</h2>
+							<pre><code class="hljs" data-trim contenteditable>
+def readFile(filename: String): String = 
+  new String(Files.readAllBytes(Paths.get(filename)), UTF_8)
+
+// VS
+
+def readFile(filename: String): IO[String] = 
+  IO(new String(Files.readAllBytes(Paths.get(filename)), UTF_8))
+							</code></pre>
+					</section>
+
+					<section>
+						<h2>Conclusion</h2>
+
+						<pre><code class="hljs" data-trim contenteditable>
+@ bookmarkDao.saveBookmark(bookmark, savedUser.id)
+res22: ConnectionIO[BookmarkId] = FlatMapped(
+  FlatMapped(
+    Suspend(
+      PrepareStatement(
+        """INSERT INTO bookmarks (id, user_id, url, description)
+     .....
+)
+							</code></pre>
+							<p>Such way of programming nullifies any reasons to use:</p>
+							<ul>
+								<li>Aspects oriented programming</li>
+								<li>SLF4J like logging facades</li>
+								<li>Mocking frameworks</li>
+							</ul>
+
+							<div class="crud-references">
+								<p><a href="https://tpolecat.github.io/doobie/docs/01-Introduction.html">Book of doobie</a> by Rob Norris</p>
+							</div>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>What we achieved</h2>
+						<ul>
+							<li>succinct code - comparable to Javascript or other interpreted languages</li>
+							<li>short feeback loop when developing</li>
+							<li>more importantly: all that without giving up types</li>
+							<li>actually code is much more typesafe than Java</li>
+							<li>false dichotomy "power vs safety" disqualified</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Key takeaways</h2>
+						<ul>
+							<li>Defer types, decisions, effect, evaluation to the last moment</li>
+							<li>In OOP known as Inversion of Control (in a few degrees more limited sense)</li>
+							<li>Aim at orthogonal composability. Composable blocks should address a single concern</li>
+						</ul>
+
+						<div class="crud-references">
+							<p>paraphrased <a href="https://twitter.com/jdegoes/status/974045822424776704">https://twitter.com/jdegoes/status/974045822424776704</a> by John De Goes</p>
+						</div>
+					</section>
+				</section>
+
+				<!-- General thoughts -->
+				<section>
+					<section>	
+						<h2>Why it's worth to learn FP</h2>
+						
+						<ul>
+							<li>It's not jQuery vs backbone vs Angular vs React kind of thing. Those things are always arbitrary APIs, they will change over time</li>
+							<ul>
+								<li>better to invest in education that is transferable between languages</li>
+								<li>informal vs formal reasoning</li>
+							</ul>
+							<li>instead of designing APIs you discover algebraic properties of models you work with</li>
+							<li>Learning FP will make you better programmer</li>
+						</ul>
+
+						<div class="crud-references">
+							<p><a href="https://www.theatlantic.com/technology/archive/2017/09/saving-the-world-from-code/540393/">The Coming Software Apocalypse</a> by James Somers</p>
+						</div>
+					</section>
+
+					<section>	
+						<h2>Laws</h2>
+							<p>It is not enough to just implement typeclass interface to have lawful instance</p>
+						
+							<pre><code class="hljs" data-trim contenteditable>
+for any T {
+	Functor[T].map(x)(identity) == x
+}
+							</code></pre>
+						
+					</section>
+
+					<section>
+						<h2>Tips for learning</h2>
+
+						<p>You'll struggle even with very simple tasks which otherwise you'd tackle in a few moments. It may feel frustrating - be prepared for it and embrace it.</p>
+						<p>Celebrate small victories - it's actully easy as FP gives you a lot of intellectual satisfaction. You just need to forget about productivity-centered thinking while learning.</p>
+						<p>Avoid metaphors based learning materials. Going through a bit of theory is inevitable but will be faster than relying on unclear metaphors.</p>
+					</section>
+
+					<section>
+						<h2>Ultimate conclusion</h2>
+						
+						<img src="images/TwitterParameter.png" />
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>References - general Scala learning</h2>
+						<h3>Basics</h3>
+						<ul>
+							<li><a href="https://www.coursera.org/learn/progfun1">Functional Programming Principles in Scala</a> by Martin Odersky</li>
+							<li><a href="https://www.manning.com/books/functional-programming-in-scala">Functional Programming in Scala</a> by Paul Chiusano and Runar Bjarnason
+</li>
+							<li><a href="https://danielwestheide.com/scala/neophytes.html">The Neophyte's Guide to Scala
+</a> by Daniel Westheide</li>
+						</ul>
+					</section>
+
+					<section>
+						<h2>References - general Scala learning</h2>
+						<h3>Further learning</h3>
+						<ul>
+							<li><a href="https://www.manning.com/books/functional-and-reactive-domain-modeling">Functional and Reactive Domain Modeling</a> by Debasish Ghosh</li>
+						</ul>
+					</section>
+
+					<section>
+						<h2>Questions?</h2>
+						<p>Code and presentation: <br /> <a href="https://github.com/note/crud-template/tree/tuebingen-talk">https://github.com/note/crud-template/tree/tuebingen-talk</a></p>
+					</section>
+				</section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>
