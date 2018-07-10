@@ -1,5 +1,8 @@
 # Pragmatic functional programming in Scala
 
+In this branch there's a code with gaps that need to be filled. If you want to see the fully
+working version of the code switch to `demo-with-solutions` branch.
+
 ## How to run presentation
 
 Run the following:
