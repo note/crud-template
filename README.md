@@ -11,11 +11,13 @@ Run the following:
 cd presentation && npm install && node plugin/notes-server
 ```
 
-Then follow navigate to returned URL to view the presentation.
+Then navigate to returned URL to view the presentation.
 
 ## How to run the code
 
 ### Running application
+
+Start dockerized sbt with:
 
 ```
 ./dockerized_sbt.sh
@@ -37,7 +39,7 @@ From sbt shell:
 test
 ```
 
-#### Integration tests:
+#### Integration tests
 
 From sbt shell:
 
